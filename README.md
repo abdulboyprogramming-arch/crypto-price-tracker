@@ -1,4 +1,4 @@
-#Features of this Live Tracker:
+# Features of this Live Tracker:
 
 1. Real-time Data: Uses CoinGecko API (live prices)
 2. Auto-refresh: Updates every 30 seconds automatically
