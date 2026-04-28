@@ -1,0 +1,290 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>Crypto Tracker Pro - Settings</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #0f2027, #203a43, #2c5364);
+            color: white;
+            min-height: 100vh;
+            padding: 40px;
+        }
+        
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: rgba(255,255,255,0.05);
+            border-radius: 20px;
+            padding: 30px;
+        }
+        
+        h1 {
+            font-size: 1.8rem;
+            margin-bottom: 10px;
+            background: linear-gradient(90deg, #00d4ff, #7b2cbf);
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+        }
+        
+        .subtitle {
+            opacity: 0.7;
+            margin-bottom: 30px;
+        }
+        
+        .section {
+            margin-bottom: 30px;
+            background: rgba(255,255,255,0.03);
+            border-radius: 12px;
+            padding: 20px;
+        }
+        
+        .section-title {
+            font-size: 1.2rem;
+            margin-bottom: 15px;
+            border-left: 3px solid #00d4ff;
+            padding-left: 12px;
+        }
+        
+        .setting-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px 0;
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+        }
+        
+        .setting-item:last-child {
+            border-bottom: none;
+        }
+        
+        .setting-label {
+            font-weight: 500;
+        }
+        
+        .setting-description {
+            font-size: 0.75rem;
+            opacity: 0.6;
+            margin-top: 4px;
+        }
+        
+        select, input {
+            background: rgba(255,255,255,0.1);
+            border: 1px solid rgba(255,255,255,0.2);
+            padding: 8px 12px;
+            border-radius: 8px;
+            color: white;
+            font-size: 0.9rem;
+        }
+        
+        button {
+            background: linear-gradient(90deg, #3498db, #2ecc71);
+            border: none;
+            padding: 10px 20px;
+            border-radius: 8px;
+            color: white;
+            cursor: pointer;
+            font-weight: 600;
+            transition: transform 0.2s;
+        }
+        
+        button:hover {
+            transform: scale(1.02);
+        }
+        
+        .watchlist-items {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+        
+        .watchlist-chip {
+            background: linear-gradient(90deg, #00d4ff, #7b2cbf);
+            padding: 5px 12px;
+            border-radius: 20px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .remove-chip {
+            background: none;
+            border: none;
+            color: white;
+            cursor: pointer;
+            font-size: 0.8rem;
+            padding: 0;
+        }
+        
+        .add-watchlist {
+            display: flex;
+            gap: 10px;
+            margin-top: 10px;
+        }
+        
+        .add-watchlist input {
+            flex: 1;
+        }
+        
+        .alert-card {
+            background: rgba(255,255,255,0.05);
+            border-radius: 12px;
+            padding: 15px;
+            margin-bottom: 15px;
+        }
+        
+        .alert-form {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+            margin-top: 15px;
+        }
+        
+        .alert-form select, .alert-form input {
+            flex: 1;
+            min-width: 100px;
+        }
+        
+        .status-message {
+            margin-top: 15px;
+            padding: 10px;
+            border-radius: 8px;
+            display: none;
+        }
+        
+        .status-message.success {
+            background: rgba(16, 185, 129, 0.2);
+            border: 1px solid #10b981;
+            display: block;
+        }
+        
+        .status-message.error {
+            background: rgba(239, 68, 68, 0.2);
+            border: 1px solid #ef4444;
+            display: block;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>⚙️ Crypto Tracker Pro Settings</h1>
+        <div class="subtitle">Customize your experience</div>
+        
+        <!-- Watchlist Section -->
+        <div class="section">
+            <div class="section-title">📊 Watchlist</div>
+            <div class="watchlist-items" id="watchlistContainer"></div>
+            <div class="add-watchlist">
+                <input type="text" id="newSymbol" placeholder="Enter symbol (e.g., BTC)" maxlength="10">
+                <button id="addSymbolBtn">+ Add</button>
+            </div>
+        </div>
+        
+        <!-- Alerts Section -->
+        <div class="section">
+            <div class="section-title">🔔 Price Alerts</div>
+            <div id="alertsContainer"></div>
+            <div class="alert-card">
+                <strong>Create New Alert</strong>
+                <div class="alert-form">
+                    <select id="alertSymbol">
+                        <option value="">Select Coin</option>
+                    </select>
+                    <select id="alertCondition">
+                        <option value="above">Above</option>
+                        <option value="below">Below</option>
+                    </select>
+                    <input type="number" id="alertPrice" placeholder="Target Price">
+                    <button id="createAlertBtn">Create</button>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Appearance Section -->
+        <div class="section">
+            <div class="section-title">🎨 Appearance</div>
+            <div class="setting-item">
+                <div>
+                    <div class="setting-label">Theme</div>
+                    <div class="setting-description">Choose your preferred theme</div>
+                </div>
+                <select id="themeSelect">
+                    <option value="dark">Dark</option>
+                    <option value="light">Light</option>
+                    <option value="auto">Auto</option>
+                </select>
+            </div>
+        </div>
+        
+        <!-- Data Settings -->
+        <div class="section">
+            <div class="section-title">📡 Data Settings</div>
+            <div class="setting-item">
+                <div>
+                    <div class="setting-label">Refresh Interval</div>
+                    <div class="setting-description">How often prices update</div>
+                </div>
+                <select id="refreshInterval">
+                    <option value="15">15 seconds</option>
+                    <option value="30" selected>30 seconds</option>
+                    <option value="60">60 seconds</option>
+                    <option value="120">120 seconds</option>
+                </select>
+            </div>
+            <div class="setting-item">
+                <div>
+                    <div class="setting-label">Currency</div>
+                    <div class="setting-description">Display currency</div>
+                </div>
+                <select id="currencySelect">
+                    <option value="usd">USD ($)</option>
+                    <option value="eur">EUR (€)</option>
+                    <option value="gbp">GBP (£)</option>
+                    <option value="jpy">JPY (¥)</option>
+                </select>
+            </div>
+        </div>
+        
+        <!-- Notifications -->
+        <div class="section">
+            <div class="section-title">🔔 Notifications</div>
+            <div class="setting-item">
+                <div>
+                    <div class="setting-label">Desktop Notifications</div>
+                    <div class="setting-description">Receive alerts as desktop notifications</div>
+                </div>
+                <input type="checkbox" id="notificationToggle">
+            </div>
+            <div class="setting-item">
+                <div>
+                    <div class="setting-label">Sound Alerts</div>
+                    <div class="setting-description">Play sound when alerts trigger</div>
+                </div>
+                <input type="checkbox" id="soundToggle">
+            </div>
+        </div>
+        
+        <!-- Data Management -->
+        <div class="section">
+            <div class="section-title">💾 Data Management</div>
+            <div class="setting-item">
+                <button id="exportDataBtn">Export Data (JSON)</button>
+                <button id="clearDataBtn" style="background: #ef4444;">Clear All Data</button>
+            </div>
+        </div>
+        
+        <div id="statusMessage" class="status-message"></div>
+    </div>
+    
+    <script src="options.js"></script>
+</body>
+</html>
