@@ -1,0 +1,35 @@
+# ============================================
+# CRYPTO PRICE TRACKER - Python Requirements
+# ============================================
+#
+# This package has ZERO external dependencies!
+# Only Python standard library is required.
+#
+# Python 3.8 or higher is recommended.
+#
+# No pip install -r requirements.txt needed.
+# The package works out of the box.
+#
+# ============================================
+
+# This file is for documentation purposes only.
+# The following modules are from Python standard library:
+#
+# - urllib.request  : HTTP requests for web scraping
+# - json            : JSON parsing
+# - re              : Regex for price extraction
+# - time            : Rate limiting and timing
+# - datetime        : Timestamp handling
+# - sqlite3         : Persistent caching
+# - threading       : Thread-safe operations
+# - argparse        : CLI argument parsing
+# - http.server     : API server
+# - statistics      : Price calculations
+# - random          : Simulated prices
+# - math            : Mathematical operations
+# - collections     : Data structures
+# - typing          : Type hints
+
+# ============================================
+# TOTAL EXTERNAL DEPENDENCIES: 0
+# ============================================
