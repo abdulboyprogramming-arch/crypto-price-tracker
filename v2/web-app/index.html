@@ -1,0 +1,378 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <meta name="description" content="Professional real-time cryptocurrency price tracker with advanced analytics, watchlist, and price alerts">
+    <meta name="theme-color" content="#1a1a2e">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    
+    <title>Crypto Tracker Pro | Real-Time Crypto Intelligence</title>
+    
+    <!-- PWA Manifest -->
+    <link rel="manifest" href="manifest.json">
+    <link rel="apple-touch-icon" href="assets/icons/icon-192x192.png">
+    
+    <!-- Fonts & Icons -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <!-- Chart.js for advanced charts -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+    
+    <!-- Main Styles -->
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <!-- Loading Overlay -->
+    <div id="loadingOverlay" class="loading-overlay">
+        <div class="spinner"></div>
+        <p>Loading crypto data...</p>
+    </div>
+
+    <!-- Toast Notification Container -->
+    <div id="toastContainer" class="toast-container"></div>
+
+    <div class="app-container">
+        <!-- Sidebar Navigation -->
+        <aside class="sidebar" id="sidebar">
+            <div class="sidebar-header">
+                <div class="logo">
+                    <i class="fas fa-chart-line"></i>
+                    <span>Crypto<span class="highlight">Tracker</span></span>
+                </div>
+                <button class="sidebar-toggle" id="sidebarToggle">
+                    <i class="fas fa-bars"></i>
+                </button>
+            </div>
+
+            <nav class="sidebar-nav">
+                <a href="#" class="nav-item active" data-page="dashboard">
+                    <i class="fas fa-tachometer-alt"></i>
+                    <span>Dashboard</span>
+                </a>
+                <a href="#" class="nav-item" data-page="markets">
+                    <i class="fas fa-chart-simple"></i>
+                    <span>Markets</span>
+                </a>
+                <a href="#" class="nav-item" data-page="watchlist">
+                    <i class="fas fa-star"></i>
+                    <span>Watchlist</span>
+                    <span class="badge" id="watchlistBadge">0</span>
+                </a>
+                <a href="#" class="nav-item" data-page="alerts">
+                    <i class="fas fa-bell"></i>
+                    <span>Alerts</span>
+                </a>
+                <a href="#" class="nav-item" data-page="analytics">
+                    <i class="fas fa-chart-line"></i>
+                    <span>Analytics</span>
+                </a>
+                <a href="#" class="nav-item" data-page="settings">
+                    <i class="fas fa-cog"></i>
+                    <span>Settings</span>
+                </a>
+            </nav>
+
+            <div class="sidebar-footer">
+                <div class="market-status">
+                    <i class="fas fa-circle" id="marketStatusDot"></i>
+                    <span id="marketStatus">Live</span>
+                </div>
+                <div class="version">v2.0.0</div>
+            </div>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <!-- Top Header -->
+            <header class="top-header">
+                <div class="header-left">
+                    <h1 id="pageTitle">Dashboard</h1>
+                    <div class="last-updated" id="lastUpdated">
+                        <i class="fas fa-clock"></i>
+                        <span>Last updated: --:--:--</span>
+                    </div>
+                </div>
+                <div class="header-right">
+                    <div class="search-container">
+                        <i class="fas fa-search"></i>
+                        <input type="text" id="globalSearch" placeholder="Search coins..." autocomplete="off">
+                        <div class="search-results" id="searchResults"></div>
+                    </div>
+                    <button class="theme-toggle" id="themeToggle">
+                        <i class="fas fa-moon"></i>
+                    </button>
+                    <button class="refresh-btn" id="refreshBtn">
+                        <i class="fas fa-sync-alt"></i>
+                    </button>
+                </div>
+            </header>
+
+            <!-- Dashboard Page -->
+            <div id="dashboardPage" class="page active">
+                <!-- Market Stats Cards -->
+                <div class="stats-grid" id="statsGrid">
+                    <div class="stat-card">
+                        <div class="stat-icon">
+                            <i class="fas fa-chart-line"></i>
+                        </div>
+                        <div class="stat-info">
+                            <span class="stat-label">Total Market Cap</span>
+                            <span class="stat-value" id="totalMarketCap">$0</span>
+                            <span class="stat-change" id="marketCapChange">--</span>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon">
+                            <i class="fas fa-chart-pie"></i>
+                        </div>
+                        <div class="stat-info">
+                            <span class="stat-label">24h Volume</span>
+                            <span class="stat-value" id="totalVolume">$0</span>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon">
+                            <i class="fab fa-bitcoin"></i>
+                        </div>
+                        <div class="stat-info">
+                            <span class="stat-label">BTC Dominance</span>
+                            <span class="stat-value" id="btcDominance">0%</span>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon">
+                            <i class="fas fa-database"></i>
+                        </div>
+                        <div class="stat-info">
+                            <span class="stat-label">Active Coins</span>
+                            <span class="stat-value" id="activeCoins">0</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Top Gainers / Losers -->
+                <div class="trending-section">
+                    <div class="section-header">
+                        <h2>Market Movers</h2>
+                        <div class="section-tabs">
+                            <button class="tab-btn active" data-trend="gainers">Top Gainers</button>
+                            <button class="tab-btn" data-trend="losers">Top Losers</button>
+                        </div>
+                    </div>
+                    <div class="trending-grid" id="trendingGrid">
+                        <!-- Dynamically populated -->
+                    </div>
+                </div>
+
+                <!-- Price Chart -->
+                <div class="chart-section">
+                    <div class="section-header">
+                        <h2>Market Overview</h2>
+                        <div class="chart-controls">
+                            <button class="chart-time-btn active" data-range="7">7D</button>
+                            <button class="chart-time-btn" data-range="30">30D</button>
+                            <button class="chart-time-btn" data-range="90">90D</button>
+                        </div>
+                    </div>
+                    <div class="chart-container">
+                        <canvas id="priceChart" width="400" height="200"></canvas>
+                    </div>
+                </div>
+
+                <!-- Top Coins Table -->
+                <div class="table-section">
+                    <div class="section-header">
+                        <h2>Top Cryptocurrencies</h2>
+                        <div class="table-controls">
+                            <button class="sort-btn" data-sort="rank">Rank <i class="fas fa-arrow-down"></i></button>
+                            <button class="sort-btn" data-sort="name">Name</button>
+                            <button class="sort-btn" data-sort="price">Price</button>
+                            <button class="sort-btn" data-sort="change">24h Change</button>
+                        </div>
+                    </div>
+                    <div class="table-container">
+                        <table class="crypto-table" id="cryptoTable">
+                            <thead>
+                                <tr>
+                                    <th>#</th>
+                                    <th>Coin</th>
+                                    <th>Price</th>
+                                    <th>24h Change</th>
+                                    <th>24h Volume</th>
+                                    <th>Market Cap</th>
+                                    <th>Action</th>
+                                </tr>
+                            </thead>
+                            <tbody id="cryptoTableBody">
+                                <tr><td colspan="7" class="loading-cell">Loading cryptocurrency data...</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                    <div class="pagination" id="pagination">
+                        <button class="page-btn" id="prevPage" disabled>
+                            <i class="fas fa-chevron-left"></i> Previous
+                        </button>
+                        <span id="pageInfo">Page 1</span>
+                        <button class="page-btn" id="nextPage">
+                            Next <i class="fas fa-chevron-right"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Markets Page -->
+            <div id="marketsPage" class="page">
+                <div class="page-header">
+                    <h2><i class="fas fa-chart-simple"></i> Market Overview</h2>
+                    <p>Real-time market data and trends</p>
+                </div>
+                <div class="markets-full-table">
+                    <!-- Full market data table -->
+                </div>
+            </div>
+
+            <!-- Watchlist Page -->
+            <div id="watchlistPage" class="page">
+                <div class="page-header">
+                    <h2><i class="fas fa-star"></i> My Watchlist</h2>
+                    <p>Track your favorite cryptocurrencies</p>
+                </div>
+                <div class="watchlist-container" id="watchlistContainer">
+                    <!-- Watchlist items -->
+                </div>
+            </div>
+
+            <!-- Alerts Page -->
+            <div id="alertsPage" class="page">
+                <div class="page-header">
+                    <h2><i class="fas fa-bell"></i> Price Alerts</h2>
+                    <p>Get notified when prices hit your targets</p>
+                </div>
+                <div class="alerts-container">
+                    <div class="create-alert-card">
+                        <h3>Create New Alert</h3>
+                        <div class="alert-form">
+                            <select id="alertSymbol" class="alert-input">
+                                <option value="">Select Coin</option>
+                            </select>
+                            <select id="alertCondition" class="alert-input">
+                                <option value="above">Above</option>
+                                <option value="below">Below</option>
+                            </select>
+                            <input type="number" id="alertPrice" placeholder="Target Price" class="alert-input">
+                            <button id="createAlertBtn" class="btn-primary">Create Alert</button>
+                        </div>
+                    </div>
+                    <div class="alerts-list" id="alertsList">
+                        <!-- Active alerts -->
+                    </div>
+                </div>
+            </div>
+
+            <!-- Analytics Page -->
+            <div id="analyticsPage" class="page">
+                <div class="page-header">
+                    <h2><i class="fas fa-chart-line"></i> Advanced Analytics</h2>
+                    <p>Price trends, predictions, and market insights</p>
+                </div>
+                <div class="analytics-grid">
+                    <div class="analytics-card">
+                        <h3>Select Coin</h3>
+                        <select id="analyticsCoin" class="analytics-select">
+                            <option value="bitcoin">Bitcoin (BTC)</option>
+                            <option value="ethereum">Ethereum (ETH)</option>
+                            <option value="solana">Solana (SOL)</option>
+                            <option value="binancecoin">Binance Coin (BNB)</option>
+                        </select>
+                    </div>
+                    <div class="analytics-card">
+                        <h3>Price Chart</h3>
+                        <canvas id="analyticsChart" width="400" height="200"></canvas>
+                    </div>
+                    <div class="analytics-card metrics-card">
+                        <h3>Technical Indicators</h3>
+                        <div class="metrics-list" id="metricsList">
+                            <!-- Metrics -->
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Settings Page -->
+            <div id="settingsPage" class="page">
+                <div class="page-header">
+                    <h2><i class="fas fa-cog"></i> Settings</h2>
+                    <p>Customize your experience</p>
+                </div>
+                <div class="settings-container">
+                    <div class="settings-section">
+                        <h3>Appearance</h3>
+                        <div class="setting-item">
+                            <label>Theme</label>
+                            <div class="theme-options">
+                                <button class="theme-option active" data-theme="dark">Dark</button>
+                                <button class="theme-option" data-theme="light">Light</button>
+                                <button class="theme-option" data-theme="auto">Auto</button>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="settings-section">
+                        <h3>Data Settings</h3>
+                        <div class="setting-item">
+                            <label>Auto-Refresh Interval</label>
+                            <select id="refreshInterval">
+                                <option value="15">15 seconds</option>
+                                <option value="30" selected>30 seconds</option>
+                                <option value="60">60 seconds</option>
+                                <option value="120">120 seconds</option>
+                            </select>
+                        </div>
+                        <div class="setting-item">
+                            <label>Currency</label>
+                            <select id="currencySelect">
+                                <option value="usd">USD ($)</option>
+                                <option value="eur">EUR (€)</option>
+                                <option value="gbp">GBP (£)</option>
+                                <option value="jpy">JPY (¥)</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="settings-section">
+                        <h3>Notifications</h3>
+                        <div class="setting-item">
+                            <label>
+                                <input type="checkbox" id="notificationToggle">
+                                Enable Desktop Notifications
+                            </label>
+                        </div>
+                        <div class="setting-item">
+                            <label>
+                                <input type="checkbox" id="soundAlertsToggle">
+                                Play Sound for Alerts
+                            </label>
+                        </div>
+                    </div>
+                    <div class="settings-section">
+                        <h3>Data Management</h3>
+                        <div class="setting-item">
+                            <button id="clearCacheBtn" class="btn-secondary">Clear Cache</button>
+                            <button id="exportDataBtn" class="btn-secondary">Export Data (CSV)</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- Sound for alerts (hidden) -->
+    <audio id="alertSound" preload="auto">
+        <source src="https://www.soundjay.com/misc/sounds/bell-ringing-05.mp3" type="audio/mpeg">
+    </audio>
+
+    <!-- Main Script -->
+    <script src="script.js"></script>
+</body>
+</html>
