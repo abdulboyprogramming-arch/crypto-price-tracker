@@ -1,0 +1,105 @@
+# ============================================
+# CRYPTO PRICE TRACKER - .gitignore
+# ============================================
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+env/
+venv/
+ENV/
+env.bak/
+venv.bak/
+.pytest_cache/
+.coverage
+htmlcov/
+.tox/
+.mypy_cache/
+.dmypy.json
+dmypy.json
+
+# Python cache database
+*.db
+*.db-journal
+*.sqlite
+*.sqlite3
+
+# Node.js / JavaScript
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.pnpm-debug.log*
+package-lock.json
+yarn.lock
+pnpm-lock.yaml
+
+# Browser extension build artifacts
+*.crx
+*.pem
+*.zip
+
+# Extension icons (generated files - do not commit)
+# v2/browser-extension/icons/*.png
+
+# IDE files
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+.desktop.ini
+Thumbs.db
+
+# Logs
+*.log
+logs/
+debug.log
+
+# Cache files
+.cache/
+.crypto_cache/
+.crypto-config.json
+.crypto-tracker-cache/
+
+# Environment variables
+.env
+.env.local
+.env.*.local
+
+# OS files
+.DS_Store
+Thumbs.db
+desktop.ini
+ehthumbs.db
+Icon?
+
+# Test outputs
+test-output/
+test-results/
+coverage/
+
+# Backup files
+*.bak
+*.backup
+*.tmp
+*.temp
+
+# Documentation build
+docs/_build/
+site/
+
+# Distribution packages
+dist/
+build/
+*.egg-info/
+*.egg
+
+# VSCode specific
+.vscode/settings.json
+.vscode/tasks.json
+.vscode/launch.json
