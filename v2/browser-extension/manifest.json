@@ -1,0 +1,64 @@
+{
+  "manifest_version": 3,
+  "name": "Crypto Tracker Pro",
+  "version": "2.0.0",
+  "description": "Real-time cryptocurrency prices, watchlist, and alerts directly in your browser",
+  "author": "Abdulrahman Adeeyo",
+  "homepage_url": "https://github.com/abdulboyprogramming-arch/crypto-price-tracker",
+  
+  "permissions": [
+    "storage",
+    "alarms",
+    "notifications",
+    "activeTab"
+  ],
+  
+  "host_permissions": [
+    "https://api.coingecko.com/*",
+    "https://api.coincap.io/*"
+  ],
+  
+  "background": {
+    "service_worker": "background.js",
+    "type": "module"
+  },
+  
+  "action": {
+    "default_popup": "popup.html",
+    "default_title": "Crypto Tracker Pro",
+    "default_icon": {
+      "16": "icons/icon16.png",
+      "48": "icons/icon48.png",
+      "128": "icons/icon128.png"
+    }
+  },
+  
+  "icons": {
+    "16": "icons/icon16.png",
+    "48": "icons/icon48.png",
+    "128": "icons/icon128.png"
+  },
+  
+  "options_page": "options.html",
+  
+  "commands": {
+    "_execute_action": {
+      "suggested_key": {
+        "default": "Ctrl+Shift+C",
+        "mac": "Command+Shift+C"
+      },
+      "description": "Open Crypto Tracker"
+    },
+    "refresh-prices": {
+      "suggested_key": {
+        "default": "Ctrl+Shift+R",
+        "mac": "Command+Shift+R"
+      },
+      "description": "Refresh prices"
+    }
+  },
+  
+  "content_security_policy": {
+    "extension_pages": "script-src 'self'; object-src 'self'"
+  }
+}
