@@ -1,0 +1,35 @@
+{
+  "name": "crypto-price-tracker",
+  "version": "1.0.0",
+  "description": "Real-time cryptocurrency price tracker with zero external APIs - Direct web scraping",
+  "main": "index.js",
+  "bin": {
+    "crypto-tracker": "./cli.js"
+  },
+  "scripts": {
+    "start": "node cli.js",
+    "test": "node test.js",
+    "api": "node api-server.js"
+  },
+  "keywords": [
+    "crypto",
+    "bitcoin",
+    "ethereum",
+    "price-tracker",
+    "cryptocurrency",
+    "web-scraping",
+    "no-api",
+    "cli"
+  ],
+  "author": "Abdulrahman Adeeyo (Abdulboy)",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/abdulboyprogramming-arch/crypto-price-tracker"
+  },
+  "engines": {
+    "node": ">=14.0.0"
+  },
+  "dependencies": {},
+  "devDependencies": {}
+}
