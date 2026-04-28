@@ -1,0 +1,15 @@
+name: Deploy v1 to Pages
+
+on:
+  push:
+    branches: [main]
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: v1/  # Only deploy v1 folder
+      - uses: actions/deploy-pages@v4
