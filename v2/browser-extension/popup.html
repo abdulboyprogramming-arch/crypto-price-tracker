@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>Crypto Price Tracker</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            width: 380px;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+            color: #eee;
+        }
+        
+        .container {
+            padding: 16px;
+        }
+        
+        .header {
+            text-align: center;
+            margin-bottom: 20px;
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+            padding-bottom: 12px;
+        }
+        
+        .header h1 {
+            font-size: 20px;
+            background: linear-gradient(135deg, #00d4ff, #7b2cbf);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        
+        .header .sub {
+            font-size: 11px;
+            opacity: 0.6;
+            margin-top: 4px;
+        }
+        
+        .price-card {
+            background: rgba(255,255,255,0.05);
+            border-radius: 12px;
+            padding: 12px;
+            margin-bottom: 10px;
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+        
+        .price-card:hover {
+            background: rgba(255,255,255,0.1);
+            transform: translateX(4px);
+        }
+        
+        .price-card .symbol {
+            font-size: 18px;
+            font-weight: bold;
+            display: inline-block;
+        }
+        
+        .price-card .price {
+            float: right;
+            font-size: 18px;
+            font-weight: bold;
+            color: #4CAF50;
+        }
+        
+        .price-card .price.loading {
+            color: #ff9800;
+            font-size: 14px;
+        }
+        
+        .price-card .price.up {
+            color: #4CAF50;
+        }
+        
+        .price-card .price.down {
+            color: #f44336;
+        }
+        
+        .price-card .timestamp {
+            font-size: 10px;
+            opacity: 0.5;
+            margin-top: 8px;
+            clear: both;
+        }
+        
+        .refresh-btn {
+            background: linear-gradient(135deg, #00d4ff, #7b2cbf);
+            border: none;
+            color: white;
+            padding: 10px 20px;
+            border-radius: 25px;
+            cursor: pointer;
+            width: 100%;
+            font-size: 14px;
+            font-weight: bold;
+            margin-top: 12px;
+            transition: transform 0.2s;
+        }
+        
+        .refresh-btn:hover {
+            transform: scale(1.02);
+        }
+        
+        .refresh-btn:active {
+            transform: scale(0.98);
+        }
+        
+        .settings-link {
+            text-align: center;
+            margin-top: 12px;
+            font-size: 11px;
+        }
+        
+        .settings-link a {
+            color: #00d4ff;
+            text-decoration: none;
+        }
+        
+        .status {
+            text-align: center;
+            font-size: 10px;
+            opacity: 0.5;
+            margin-top: 12px;
+        }
+        
+        .last-update {
+            text-align: center;
+            font-size: 10px;
+            opacity: 0.5;
+            margin-top: 8px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>💰 Crypto Price Tracker</h1>
+            <div class="sub">Real-time prices | No APIs</div>
+        </div>
+        
+        <div id="prices-container">
+            <div class="price-card">
+                <div class="symbol">BTC</div>
+                <div class="price loading">Loading...</div>
+                <div class="timestamp">Fetching...</div>
+            </div>
+            <div class="price-card">
+                <div class="symbol">ETH</div>
+                <div class="price loading">Loading...</div>
+                <div class="timestamp">Fetching...</div>
+            </div>
+            <div class="price-card">
+                <div class="symbol">SOL</div>
+                <div class="price loading">Loading...</div>
+                <div class="timestamp">Fetching...</div>
+            </div>
+        </div>
+        
+        <button class="refresh-btn" id="refreshBtn">⟳ Refresh Now</button>
+        
+        <div class="settings-link">
+            <a href="#" id="settingsLink">⚙️ Settings</a>
+        </div>
+        
+        <div class="status">
+            🔒 No API keys required • Direct scraping
+        </div>
+        <div class="last-update" id="lastUpdate">---</div>
+    </div>
+    
+    <script src="popup.js"></script>
+</body>
+  </html>
