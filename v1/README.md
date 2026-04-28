@@ -15,3 +15,6 @@ This is the first version of the crypto price tracker.
 
 ## Usage
 Open index.html in your browser
+
+## Direct link
+Available at (https://abdulboyprogramming-arch.github.io/crypto-price-tracker/)
