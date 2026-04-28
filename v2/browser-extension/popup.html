@@ -1,0 +1,233 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Crypto Tracker Pro</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+    
+    body {
+      width: 380px;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: linear-gradient(135deg, #0f2027, #203a43, #2c5364);
+      color: white;
+    }
+    
+    .header {
+      background: linear-gradient(90deg, #1a2980, #26d0ce);
+      padding: 15px;
+      text-align: center;
+    }
+    
+    .header h2 {
+      font-size: 1.2rem;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+    }
+    
+    .stats-bar {
+      display: flex;
+      justify-content: space-around;
+      padding: 10px;
+      background: rgba(0,0,0,0.3);
+      font-size: 0.7rem;
+    }
+    
+    .stat {
+      text-align: center;
+    }
+    
+    .stat-value {
+      font-weight: bold;
+      color: #4dffea;
+    }
+    
+    .tabs {
+      display: flex;
+      border-bottom: 1px solid rgba(255,255,255,0.1);
+    }
+    
+    .tab {
+      flex: 1;
+      text-align: center;
+      padding: 10px;
+      cursor: pointer;
+      background: none;
+      border: none;
+      color: rgba(255,255,255,0.6);
+      transition: all 0.2s;
+    }
+    
+    .tab.active {
+      color: #4dffea;
+      border-bottom: 2px solid #4dffea;
+    }
+    
+    .tab-content {
+      display: none;
+      padding: 10px;
+      max-height: 400px;
+      overflow-y: auto;
+    }
+    
+    .tab-content.active {
+      display: block;
+    }
+    
+    .coin-item {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 12px;
+      border-bottom: 1px solid rgba(255,255,255,0.1);
+    }
+    
+    .coin-info {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    
+    .coin-symbol {
+      font-weight: bold;
+    }
+    
+    .coin-price {
+      font-weight: 600;
+    }
+    
+    .coin-change {
+      font-size: 0.75rem;
+    }
+    
+    .positive { color: #10b981; }
+    .negative { color: #ef4444; }
+    
+    .watchlist-btn {
+      background: none;
+      border: none;
+      color: #f59e0b;
+      cursor: pointer;
+      font-size: 1rem;
+    }
+    
+    .alert-item {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 10px;
+      border-bottom: 1px solid rgba(255,255,255,0.1);
+      font-size: 0.8rem;
+    }
+    
+    .delete-alert {
+      background: none;
+      border: none;
+      color: #ef4444;
+      cursor: pointer;
+    }
+    
+    .empty-state {
+      text-align: center;
+      padding: 30px;
+      opacity: 0.6;
+    }
+    
+    .refresh-btn {
+      background: linear-gradient(90deg, #3498db, #2ecc71);
+      border: none;
+      color: white;
+      padding: 8px;
+      margin: 10px;
+      border-radius: 20px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      width: calc(100% - 20px);
+    }
+    
+    .footer {
+      padding: 10px;
+      text-align: center;
+      font-size: 0.7rem;
+      border-top: 1px solid rgba(255,255,255,0.1);
+    }
+    
+    .settings-link {
+      color: #4dffea;
+      text-decoration: none;
+    }
+    
+    /* Scrollbar */
+    ::-webkit-scrollbar {
+      width: 6px;
+    }
+    
+    ::-webkit-scrollbar-track {
+      background: rgba(255,255,255,0.1);
+    }
+    
+    ::-webkit-scrollbar-thumb {
+      background: #4dffea;
+      border-radius: 3px;
+    }
+  </style>
+</head>
+<body>
+  <div class="header">
+    <h2>
+      <i class="fas fa-chart-line"></i>
+      Crypto Tracker Pro
+    </h2>
+  </div>
+  
+  <div class="stats-bar" id="statsBar">
+    <div class="stat">
+      <div>Market Cap</div>
+      <div class="stat-value" id="totalMarketCap">--</div>
+    </div>
+    <div class="stat">
+      <div>24h Volume</div>
+      <div class="stat-value" id="totalVolume">--</div>
+    </div>
+  </div>
+  
+  <div class="tabs">
+    <button class="tab active" data-tab="prices">Prices</button>
+    <button class="tab" data-tab="watchlist">Watchlist</button>
+    <button class="tab" data-tab="alerts">Alerts</button>
+  </div>
+  
+  <div id="pricesTab" class="tab-content active">
+    <div id="pricesList"></div>
+    <button class="refresh-btn" id="refreshPricesBtn">
+      <i class="fas fa-sync-alt"></i> Refresh
+    </button>
+  </div>
+  
+  <div id="watchlistTab" class="tab-content">
+    <div id="watchlistList"></div>
+  </div>
+  
+  <div id="alertsTab" class="tab-content">
+    <div id="alertsList"></div>
+  </div>
+  
+  <div class="footer">
+    <a href="#" id="settingsLink" class="settings-link">⚙️ Settings</a>
+    <span style="margin: 0 5px">•</span>
+    <span id="lastUpdated">Updating...</span>
+  </div>
+  
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/js/all.min.js"></script>
+  <script src="popup.js"></script>
+</body>
+</html>
