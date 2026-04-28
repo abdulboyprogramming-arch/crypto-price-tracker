@@ -1,0 +1,165 @@
+name: Run Tests
+
+on:
+  pull_request:
+    branches: [main]
+  push:
+    branches: [develop]
+  workflow_dispatch:
+
+jobs:
+  test-web:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+      
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      
+      - name: Test HTML structure
+        run: |
+          echo "🔍 Testing HTML files..."
+          for file in web-app/*.html; do
+            if grep -q "</html>" "$file"; then
+              echo "✅ $file has valid HTML structure"
+            else
+              echo "❌ $file missing closing html tag"
+              exit 1
+            fi
+          done
+      
+      - name: Test required elements
+        run: |
+          echo "🔍 Testing required DOM elements..."
+          if grep -q 'id="cryptoTableBody"' web-app/index.html; then
+            echo "✅ cryptoTableBody exists"
+          else
+            echo "❌ cryptoTableBody missing"
+          fi
+          
+          if grep -q 'id="watchlistContainer"' web-app/index.html; then
+            echo "✅ watchlistContainer exists"
+          else
+            echo "❌ watchlistContainer missing"
+          fi
+      
+      - name: Test CSS variables
+        run: |
+          echo "🔍 Testing CSS variables..."
+          if grep -q '--bg-primary' web-app/style.css; then
+            echo "✅ CSS variables defined"
+          else
+            echo "❌ CSS variables missing"
+          fi
+      
+      - name: Test JavaScript syntax
+        run: |
+          echo "🔍 Testing JavaScript syntax..."
+          if node -c web-app/script.js 2>/dev/null; then
+            echo "✅ script.js syntax valid"
+          else
+            echo "❌ script.js syntax error"
+            exit 1
+          fi
+      
+      - name: Test Service Worker
+        run: |
+          echo "🔍 Testing Service Worker..."
+          if grep -q 'caches.open' web-app/sw.js; then
+            echo "✅ Service Worker has cache logic"
+          else
+            echo "❌ Service Worker missing cache logic"
+          fi
+      
+      - name: Test PWA manifest
+        run: |
+          echo "🔍 Testing PWA manifest..."
+          if grep -q '"start_url"' web-app/manifest.json; then
+            echo "✅ Manifest has start_url"
+          else
+            echo "❌ Manifest missing start_url"
+          fi
+          
+          if grep -q '"icons"' web-app/manifest.json; then
+            echo "✅ Manifest has icons"
+          else
+            echo "❌ Manifest missing icons"
+          fi
+
+  test-extension:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+      
+      - name: Test extension manifest
+        run: |
+          echo "🔍 Testing extension manifest.json..."
+          if grep -q '"manifest_version": 3' browser-extension/manifest.json; then
+            echo "✅ Manifest V3 detected"
+          else
+            echo "❌ Manifest V3 not found"
+          fi
+          
+          if grep -q '"permissions"' browser-extension/manifest.json; then
+            echo "✅ Permissions defined"
+          else
+            echo "❌ Permissions missing"
+          fi
+      
+      - name: Test background script
+        run: |
+          echo "🔍 Testing background.js..."
+          if node -c browser-extension/background.js 2>/dev/null; then
+            echo "✅ background.js syntax valid"
+          else
+            echo "❌ background.js syntax error"
+          fi
+          
+          if grep -q 'chrome.runtime.onMessage' browser-extension/background.js; then
+            echo "✅ Message handling present"
+          else
+            echo "❌ Message handling missing"
+          fi
+      
+      - name: Test popup script
+        run: |
+          echo "🔍 Testing popup.js..."
+          if node -c browser-extension/popup.js 2>/dev/null; then
+            echo "✅ popup.js syntax valid"
+          else
+            echo "❌ popup.js syntax error"
+          fi
+
+  test-summary:
+    needs: [test-web, test-extension]
+    runs-on: ubuntu-latest
+    if: always()
+    steps:
+      - name: Test Summary
+        run: |
+          echo "=========================================="
+          echo "              TEST SUMMARY                "
+          echo "=========================================="
+          echo "Web Tests: ${{ needs.test-web.result }}"
+          echo "Extension Tests: ${{ needs.test-extension.result }}"
+          echo "=========================================="
+          
+          if [[ "${{ needs.test-web.result }}" == "success" ]] && [[ "${{ needs.test-extension.result }}" == "success" ]]; then
+            echo "✅ ALL TESTS PASSED!"
+            exit 0
+          else
+            echo "❌ SOME TESTS FAILED!"
+            exit 1
+          fi
