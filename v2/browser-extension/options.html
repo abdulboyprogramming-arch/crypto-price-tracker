@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>Crypto Price Tracker - Settings</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+            color: #eee;
+            padding: 40px;
+            min-height: 100vh;
+        }
+        
+        .container {
+            max-width: 600px;
+            margin: 0 auto;
+            background: rgba(255,255,255,0.05);
+            border-radius: 20px;
+            padding: 30px;
+        }
+        
+        h1 {
+            font-size: 28px;
+            background: linear-gradient(135deg, #00d4ff, #7b2cbf);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin-bottom: 10px;
+        }
+        
+        .sub {
+            opacity: 0.6;
+            margin-bottom: 30px;
+        }
+        
+        .section {
+            margin-bottom: 30px;
+        }
+        
+        .section-title {
+            font-size: 18px;
+            font-weight: bold;
+            margin-bottom: 15px;
+            border-left: 3px solid #00d4ff;
+            padding-left: 12px;
+        }
+        
+        .symbol-list {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+        
+        .symbol-chip {
+            background: rgba(255,255,255,0.1);
+            border-radius: 20px;
+            padding: 8px 16px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        
+        .symbol-chip.selected {
+            background: linear-gradient(135deg, #00d4ff, #7b2cbf);
+        }
+        
+        .symbol-chip:hover {
+            transform: scale(1.05);
+        }
+        
+        .alert-item {
+            background: rgba(255,255,255,0.05);
+            border-radius: 12px;
+            padding: 15px;
+            margin-bottom: 15px;
+        }
+        
+        .alert-symbol {
+            font-weight: bold;
+            margin-bottom: 10px;
+            color: #00d4ff;
+        }
+        
+        .alert-inputs {
+            display: flex;
+            gap: 15px;
+            flex-wrap: wrap;
+        }
+        
+        .alert-input-group {
+            flex: 1;
+        }
+        
+        .alert-input-group label {
+            display: block;
+            font-size: 11px;
+            opacity: 0.6;
+            margin-bottom: 5px;
+        }
+        
+        .alert-input-group input {
+            width: 100%;
+            padding: 8px;
+            background: rgba(255,255,255,0.1);
+            border: 1px solid rgba(255,255,255,0.2);
+            border-radius: 8px;
+            color: white;
+        }
+        
+        button {
+            background: linear-gradient(135deg, #00d4ff, #7b2cbf);
+            border: none;
+            color: white;
+            padding: 12px 24px;
+            border-radius: 25px;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: bold;
+            width: 100%;
+            margin-top: 20px;
+        }
+        
+        button:hover {
+            transform: scale(1.02);
+        }
+        
+        .status {
+            margin-top: 15px;
+            text-align: center;
+            font-size: 12px;
+            opacity: 0.6;
+        }
+        
+        .add-symbol {
+            display: flex;
+            gap: 10px;
+            margin-top: 15px;
+        }
+        
+        .add-symbol input {
+            flex: 1;
+            padding: 10px;
+            background: rgba(255,255,255,0.1);
+            border: 1px solid rgba(255,255,255,0.2);
+            border-radius: 8px;
+            color: white;
+        }
+        
+        .add-symbol button {
+            width: auto;
+            margin-top: 0;
+            padding: 10px 20px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>⚙️ Settings</h1>
+        <div class="sub">Customize your crypto price tracker</div>
+        
+        <div class="section">
+            <div class="section-title">📊 Tracked Cryptocurrencies</div>
+            <div class="symbol-list" id="symbolList"></div>
+            <div class="add-symbol">
+                <input type="text" id="newSymbol" placeholder="Enter symbol (e.g., XRP)" maxlength="10">
+                <button id="addSymbolBtn">+ Add</button>
+            </div>
+        </div>
+        
+        <div class="section">
+            <div class="section-title">🔔 Price Alerts</div>
+            <div id="alertsContainer"></div>
+        </div>
+        
+        <button id="saveBtn">💾 Save Settings</button>
+        <div class="status" id="status"></div>
+    </div>
+    
+    <script src="options.js"></script>
+</body>
+</html>
