@@ -1,0 +1,97 @@
+/**
+ * CRYPTO PRICE TRACKER - Browser Extension Popup
+ */
+
+// Format price with appropriate decimals
+function formatPrice(price) {
+    if (!price) return 'N/A';
+    
+    if (price < 0.001) return `$${price.toFixed(10)}`;
+    if (price < 0.1) return `$${price.toFixed(6)}`;
+    if (price < 1) return `$${price.toFixed(4)}`;
+    if (price < 100) return `$${price.toFixed(2)}`;
+    return `$${price.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}`;
+}
+
+// Update the popup with prices
+async function updatePrices() {
+    return new Promise((resolve) => {
+        chrome.runtime.sendMessage({ type: 'getPrices' }, (response) => {
+            if (response && response.success) {
+                const prices = response.prices;
+                const container = document.getElementById('prices-container');
+                
+                if (container) {
+                    container.innerHTML = '';
+                    
+                    for (const [symbol, price] of Object.entries(prices)) {
+                        const card = document.createElement('div');
+                        card.className = 'price-card';
+                        
+                        const priceClass = price ? 'price' : 'price loading';
+                        const priceDisplay = price ? formatPrice(price) : 'N/A';
+                        const timestamp = price ? new Date().toLocaleTimeString() : '---';
+                        
+                        card.innerHTML = `
+                            <div class="symbol">${symbol}</div>
+                            <div class="${priceClass}">${priceDisplay}</div>
+                            <div class="timestamp">Updated: ${timestamp}</div>
+                        `;
+                        
+                        container.appendChild(card);
+                    }
+                }
+                
+                // Update last update time
+                const lastUpdate = document.getElementById('lastUpdate');
+                if (lastUpdate) {
+                    lastUpdate.textContent = `Last updated: ${new Date().toLocaleTimeString()}`;
+                }
+            }
+            resolve();
+        });
+    });
+}
+
+// Refresh prices manually
+async function refreshPrices() {
+    const refreshBtn = document.getElementById('refreshBtn');
+    if (refreshBtn) {
+        refreshBtn.textContent = '⟳ Refreshing...';
+        refreshBtn.disabled = true;
+    }
+    
+    chrome.runtime.sendMessage({ type: 'refresh' }, async () => {
+        await updatePrices();
+        if (refreshBtn) {
+            refreshBtn.textContent = '⟳ Refresh Now';
+            refreshBtn.disabled = false;
+        }
+    });
+}
+
+// Open settings page
+function openSettings() {
+    chrome.runtime.openOptionsPage();
+}
+
+// Event listeners
+document.addEventListener('DOMContentLoaded', async () => {
+    await updatePrices();
+    
+    const refreshBtn = document.getElementById('refreshBtn');
+    if (refreshBtn) {
+        refreshBtn.addEventListener('click', refreshPrices);
+    }
+    
+    const settingsLink = document.getElementById('settingsLink');
+    if (settingsLink) {
+        settingsLink.addEventListener('click', (e) => {
+            e.preventDefault();
+            openSettings();
+        });
+    }
+});
+
+// Auto-refresh every 30 seconds
+setInterval(updatePrices, 30000);
