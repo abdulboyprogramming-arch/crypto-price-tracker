@@ -1,6 +1,10 @@
-# Crypto Live Tracker 
+# Crypto Price Tracker
 
-You can check out:
-• [Version 1](v1/README.md)
+A multi-version crypto currency price tracking application.
 
-• [Version 2](v2/README.md) - In progress
+## You can check out:
+- [v1](https://your-username.github.io/crypto-price-tracker/) - Live deployment
+[Read more](v1/README.md)
+
+- v2 - Coming soon
+[Read more](v2/README.md) - In progress
