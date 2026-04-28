@@ -1,0 +1,2 @@
+# This file ensures the assets directory is tracked in git
+# Icons will be generated here by scripts/generate-icons.py
