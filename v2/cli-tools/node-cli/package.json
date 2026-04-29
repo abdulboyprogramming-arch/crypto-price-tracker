@@ -1,0 +1,37 @@
+{
+  "name": "crypto-tracker-cli",
+  "version": "2.0.0",
+  "description": "Professional cryptocurrency price tracker CLI tool",
+  "main": "index.js",
+  "bin": {
+    "crypto-tracker": "./index.js"
+  },
+  "scripts": {
+    "start": "node index.js",
+    "test": "node test.js"
+  },
+  "keywords": [
+    "crypto",
+    "bitcoin",
+    "ethereum",
+    "price-tracker",
+    "cli",
+    "cryptocurrency"
+  ],
+  "author": "Abdulrahman Adeeyo (Abdulboy)",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/abdulboyprogramming-arch/crypto-price-tracker"
+  },
+  "engines": {
+    "node": ">=14.0.0"
+  },
+  "dependencies": {
+    "axios": "^1.6.0",
+    "chalk": "^4.1.2",
+    "commander": "^11.1.0",
+    "ora": "^5.4.1",
+    "table": "^6.8.1"
+  }
+}
