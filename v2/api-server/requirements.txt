@@ -1,0 +1,20 @@
+# Crypto Tracker Pro - API Server Requirements
+
+# Core Framework
+fastapi==0.104.1
+uvicorn[standard]==0.24.0
+
+# HTTP Client
+httpx==0.25.1
+
+# Data Validation
+pydantic==2.5.0
+
+# Optional: For production deployment
+# gunicorn==21.2.0
+
+# Optional: For rate limiting
+# slowapi==0.1.9
+
+# Optional: For caching
+# redis==5.0.1
