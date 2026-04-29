@@ -42,8 +42,11 @@ pnpm-lock.yaml
 *.pem
 *.zip
 
-# Extension icons (generated files - do not commit)
-# v2/browser-extension/icons/*.png
+# Extension icons (generated files)
+v2/browser-extension/icons/*.png
+
+# Web app icons (generated files)
+v2/web-app/assets/icons/*.png
 
 # IDE files
 .vscode/
@@ -99,7 +102,11 @@ build/
 *.egg-info/
 *.egg
 
-# VSCode specific
-.vscode/settings.json
-.vscode/tasks.json
-.vscode/launch.json
+# Generated version file
+v2/web-app/version.json
+
+# Icon generation cache
+scripts/__pycache__/
+
+# Docker temporary files
+.docker/
