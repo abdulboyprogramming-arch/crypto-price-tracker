@@ -1,0 +1,21 @@
+# Crypto Tracker Pro - Browser Extension Builder
+# This Dockerfile creates a zip file of the extension for distribution
+
+FROM alpine:latest
+
+WORKDIR /build
+
+# Install zip utility
+RUN apk add --no-cache zip
+
+# Copy extension files
+COPY v2/browser-extension/ /build/extension/
+
+# Create zip archive
+RUN cd /build/extension && zip -r /build/crypto-tracker-extension.zip . && cd /
+
+# Output the zip file
+RUN mkdir /output && cp /build/crypto-tracker-extension.zip /output/
+
+# Instructions for output
+CMD ["sh", "-c", "echo 'Extension built: /output/crypto-tracker-extension.zip' && cp /output/crypto-tracker-extension.zip /extension/ 2>/dev/null || echo 'Copy the zip from the container'"]
