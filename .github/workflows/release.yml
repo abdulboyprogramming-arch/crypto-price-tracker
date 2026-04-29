@@ -1,180 +1,371 @@
-# name: Create Release
+name: Create Release
 
-# on:
-#   push:
-#     tags:
-#       - 'v*'
-#   workflow_dispatch:
-#     inputs:
-#       version:
-#         description: 'Version number (e.g., 2.0.0)'
-#         required: true
-#         type: string
-#       pre-release:
-#         description: 'Pre-release version'
-#         required: false
-#         type: boolean
-#         default: false
+on:
+  push:
+    tags:
+      - 'v*'
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Version number (e.g., 2.0.0)'
+        required: true
+        type: string
+      release_type:
+        description: 'Release type'
+        required: false
+        type: choice
+        options:
+          - auto
+          - v1
+          - v2
+          - v3
+          - full
+        default: auto
+      pre-release:
+        description: 'Pre-release version'
+        required: false
+        type: boolean
+        default: false
 
-# jobs:
-#   create-release:
-#     name: Create GitHub Release
-#     runs-on: ubuntu-latest
-#     permissions:
-#       contents: write
-#       actions: read
-#     outputs:
-#       upload_url: ${{ steps.create_release.outputs.upload_url }}
-#       version: ${{ steps.get_version.outputs.version }}
-#     steps:
-#       - name: Checkout code
-#         uses: actions/checkout@v4
-#         fetch-depth: 0
+permissions:
+  contents: write
+  actions: read
 
-#       - name: Get version
-#         id: get_version
-#         run: |
-#           if [ -n "${{ github.event.inputs.version }}" ]; then
-#             VERSION="${{ github.event.inputs.version }}"
-#           else
-#             VERSION="${GITHUB_REF_NAME#v}"
-#           fi
-#           echo "version=$VERSION" >> $GITHUB_OUTPUT
-#           echo "VERSION=$VERSION"
+jobs:
+  detect-version:
+    name: Detect Version Type
+    runs-on: ubuntu-latest
+    outputs:
+      version: ${{ steps.get_version.outputs.version }}
+      major_version: ${{ steps.get_major.outputs.major }}
+      type: ${{ steps.get_type.outputs.type }}
+      is_pre_release: ${{ steps.check_pre_release.outputs.is_pre_release }}
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        fetch-depth: 0
 
-#       - name: Generate changelog
-#         run: |
-#           echo "## 🚀 Crypto Tracker Pro v${{ steps.get_version.outputs.version }}" > RELEASE_NOTES.md
-#           echo "" >> RELEASE_NOTES.md
-#           echo "### ✨ What's New" >> RELEASE_NOTES.md
-#           echo "- Real-time cryptocurrency prices" >> RELEASE_NOTES.md
-#           echo "- Multi-platform support (Web, Extension, CLI, API)" >> RELEASE_NOTES.md
-#           echo "- Watchlist and price alerts" >> RELEASE_NOTES.md
-#           echo "- Dark/Light theme" >> RELEASE_NOTES.md
-#           echo "- PWA support for mobile install" >> RELEASE_NOTES.md
-#           echo "- Browser extension for Chrome/Firefox" >> RELEASE_NOTES.md
-#           echo "- Python and Node.js CLI tools" >> RELEASE_NOTES.md
-#           echo "- REST API with FastAPI" >> RELEASE_NOTES.md
-#           echo "" >> RELEASE_NOTES.md
-#           echo "### 📦 Downloads" >> RELEASE_NOTES.md
-#           echo "- **Web App**: [Live Demo](https://abdulboyprogramming-arch.github.io/crypto-price-tracker/v2/web-app/)" >> RELEASE_NOTES.md
-#           echo "- **Browser Extension**: Load unpacked from \`v2/browser-extension/\`" >> RELEASE_NOTES.md
-#           echo "" >> RELEASE_NOTES.md
-#           echo "### 📋 Full Changelog" >> RELEASE_NOTES.md
-#           echo "See [commits](https://github.com/abdulboyprogramming-arch/crypto-price-tracker/commits/main)" >> RELEASE_NOTES.md
+      - name: Get version number
+        id: get_version
+        run: |
+          if [ -n "${{ github.event.inputs.version }}" ]; then
+            VERSION="${{ github.event.inputs.version }}"
+          else
+            VERSION="${GITHUB_REF_NAME#v}"
+          fi
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
+          echo "VERSION=$VERSION"
 
-#       - name: Create Release
-#         id: create_release
-#         uses: softprops/action-gh-release@v1
-#         with:
-#           name: Crypto Tracker Pro v${{ steps.get_version.outputs.version }}
-#           body_path: RELEASE_NOTES.md
-#           draft: false
-#           prerelease: ${{ github.event.inputs.pre-release == 'true' }}
-#           generate_release_notes: true
+      - name: Extract major version
+        id: get_major
+        run: |
+          VERSION="${{ steps.get_version.outputs.version }}"
+          MAJOR=$(echo "$VERSION" | cut -d. -f1)
+          echo "major=$MAJOR" >> $GITHUB_OUTPUT
+          echo "Detected major version: $MAJOR"
 
-#   build-assets:
-#     name: Build Release Assets
-#     runs-on: ubuntu-latest
-#     needs: create-release
-#     steps:
-#       - name: Checkout code
-#         uses: actions/checkout@v4
+      - name: Detect release type intelligently
+        id: get_type
+        run: |
+          MAJOR="${{ steps.get_major.outputs.major }}"
+          MANUAL_TYPE="${{ github.event.inputs.release_type }}"
+          
+          # Manual override takes precedence
+          if [ -n "$MANUAL_TYPE" ] && [ "$MANUAL_TYPE" != "auto" ]; then
+            TYPE="$MANUAL_TYPE"
+            echo "Using manual type: $TYPE"
+          else
+            # Auto-detect based on major version
+            if [ "$MAJOR" = "1" ]; then
+              TYPE="v1"
+            elif [ "$MAJOR" = "2" ]; then
+              TYPE="v2"
+            elif [ "$MAJOR" = "3" ]; then
+              TYPE="v3"
+            elif [ "$MAJOR" = "4" ]; then
+              TYPE="v4"
+            else
+              # For v5, v6, v7+ - user must specify manually or default to full
+              TYPE="full"
+              echo "⚠️ Unknown major version $MAJOR. Defaulting to 'full'. Use manual override if needed."
+            fi
+          fi
+          echo "type=$TYPE" >> $GITHUB_OUTPUT
+          echo "Detected release type: $TYPE"
 
-#       - name: Setup Python
-#         uses: actions/setup-python@v5
-#         with:
-#           python-version: '3.11'
+      - name: Check for pre-release indicators
+        id: check_pre_release
+        run: |
+          VERSION="${{ steps.get_version.outputs.version }}"
+          IS_PRE=false
+          
+          # Check for pre-release indicators in version
+          if [[ "$VERSION" == *"-alpha"* ]] || \
+             [[ "$VERSION" == *"-beta"* ]] || \
+             [[ "$VERSION" == *"-rc"* ]] || \
+             [[ "$VERSION" == *"-pre"* ]]; then
+            IS_PRE=true
+          fi
+          
+          # Manual pre-release override
+          if [ "${{ github.event.inputs.pre-release }}" = "true" ]; then
+            IS_PRE=true
+          fi
+          
+          echo "is_pre_release=$IS_PRE" >> $GITHUB_OUTPUT
+          
+          if [ "$IS_PRE" = "true" ]; then
+            echo "📢 This is a PRE-RELEASE version"
+          fi
 
-#       - name: Install Pillow
-#         run: |
-#           pip install Pillow
+  build-release:
+    name: Build Release Assets
+    runs-on: ubuntu-latest
+    needs: detect-version
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
 
-#       - name: Generate icons
-#         run: |
-#           if [ -f "scripts/generate-icons.py" ]; then
-#             python scripts/generate-icons.py || echo "Icon generation skipped"
-#           fi
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
 
-#       - name: Create V2 Web App Archive
-#         run: |
-#           cd v2/web-app
-#           zip -r ../../crypto-tracker-web-v${{ needs.create-release.outputs.version }}.zip . -x "*.pyc" -x "__pycache__/*"
-#           cd ../..
-#           echo "✅ Created web app archive"
+      - name: Install Pillow for icons
+        run: |
+          pip install Pillow
 
-#       - name: Create Browser Extension Archive
-#         run: |
-#           cd v2/browser-extension
-#           zip -r ../../crypto-tracker-extension-v${{ needs.create-release.outputs.version }}.zip . -x "*.pyc" -x "__pycache__/*"
-#           cd ../..
-#           echo "✅ Created extension archive"
+      - name: Generate icons
+        run: |
+          if [ -f "scripts/generate-icons.py" ]; then
+            python scripts/generate-icons.py || echo "Icon generation skipped"
+          fi
 
-#       - name: Create Python CLI Archive
-#         run: |
-#           if [ -d "v2/cli-tools/python-cli" ]; then
-#             cd v2/cli-tools/python-cli
-#             zip -r ../../../crypto-tracker-python-cli-v${{ needs.create-release.outputs.version }}.zip .
-#             cd ../../..
-#             echo "✅ Created Python CLI archive"
-#           fi
+      # ============================================
+      # V1 RELEASE ASSETS (for v1.x.x tags)
+      # ============================================
+      - name: Create V1 Release Archive
+        if: needs.detect-version.outputs.type == 'v1' || needs.detect-version.outputs.type == 'full'
+        run: |
+          if [ -d "v1" ]; then
+            cd v1
+            zip -r ../crypto-tracker-v1-${{ needs.detect-version.outputs.version }}.zip . -x "*.pyc" -x "__pycache__/*" -x ".github/*"
+            cd ..
+            echo "✅ Created V1 archive"
+          else
+            echo "⚠️ V1 directory not found - skipping V1 assets"
+          fi
 
-#       - name: Create Node.js CLI Archive
-#         run: |
-#           if [ -d "v2/cli-tools/node-cli" ]; then
-#             cd v2/cli-tools/node-cli
-#             zip -r ../../../crypto-tracker-node-cli-v${{ needs.create-release.outputs.version }}.zip . -x "node_modules/*"
-#             cd ../../..
-#             echo "✅ Created Node.js CLI archive"
-#           fi
+      # ============================================
+      # V2 RELEASE ASSETS (for v2.x.x tags)
+      # ============================================
+      - name: Create V2 Web App Archive
+        if: needs.detect-version.outputs.type == 'v2' || needs.detect-version.outputs.type == 'full'
+        run: |
+          if [ -d "v2/web-app" ]; then
+            cd v2/web-app
+            zip -r ../../crypto-tracker-v2-web-${{ needs.detect-version.outputs.version }}.zip . -x "*.pyc" -x "__pycache__/*"
+            cd ../..
+            echo "✅ Created V2 web app archive"
+          fi
 
-#       - name: Create API Server Archive
-#         run: |
-#           if [ -d "v2/api-server" ]; then
-#             cd v2/api-server
-#             zip -r ../../crypto-tracker-api-v${{ needs.create-release.outputs.version }}.zip .
-#             cd ../..
-#             echo "✅ Created API server archive"
-#           fi
+      - name: Create V2 Browser Extension Archive
+        if: needs.detect-version.outputs.type == 'v2' || needs.detect-version.outputs.type == 'full'
+        run: |
+          if [ -d "v2/browser-extension" ]; then
+            cd v2/browser-extension
+            zip -r ../../crypto-tracker-v2-extension-${{ needs.detect-version.outputs.version }}.zip . -x "*.pyc" -x "__pycache__/*"
+            cd ../..
+            echo "✅ Created V2 extension archive"
+          fi
 
-#       - name: Create Full Source Archive
-#         run: |
-#           zip -r crypto-tracker-source-v${{ needs.create-release.outputs.version }}.zip . \
-#             -x "*.git*" \
-#             -x "*node_modules*" \
-#             -x "*.pyc" \
-#             -x "__pycache__/*" \
-#             -x "*.zip" \
-#             -x "v1/.git/*" \
-#             -x "v2/.git/*"
-#           echo "✅ Created source archive"
+      - name: Create V2 Python CLI Archive
+        if: needs.detect-version.outputs.type == 'v2' || needs.detect-version.outputs.type == 'full'
+        run: |
+          if [ -d "v2/cli-tools/python-cli" ]; then
+            cd v2/cli-tools/python-cli
+            zip -r ../../../crypto-tracker-v2-python-cli-${{ needs.detect-version.outputs.version }}.zip .
+            cd ../../..
+            echo "✅ Created V2 Python CLI archive"
+          fi
 
-#       - name: Upload Assets to Release
-#         uses: softprops/action-gh-release@v1
-#         with:
-#           tag_name: v${{ needs.create-release.outputs.version }}
-#           files: |
-#             crypto-tracker-web-*.zip
-#             crypto-tracker-extension-*.zip
-#             crypto-tracker-python-cli-*.zip
-#             crypto-tracker-node-cli-*.zip
-#             crypto-tracker-api-*.zip
-#             crypto-tracker-source-*.zip
-#         env:
-#           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - name: Create V2 Node.js CLI Archive
+        if: needs.detect-version.outputs.type == 'v2' || needs.detect-version.outputs.type == 'full'
+        run: |
+          if [ -d "v2/cli-tools/node-cli" ]; then
+            cd v2/cli-tools/node-cli
+            zip -r ../../../crypto-tracker-v2-node-cli-${{ needs.detect-version.outputs.version }}.zip . -x "node_modules/*"
+            cd ../../..
+            echo "✅ Created V2 Node.js CLI archive"
+          fi
 
-#   notify:
-#     name: Notify Completion
-#     runs-on: ubuntu-latest
-#     needs: [create-release, build-assets]
-#     if: always()
-#     steps:
-#       - name: Print Completion
-#         run: |
-#           echo "=========================================="
-#           echo "        RELEASE COMPLETED                  "
-#           echo "=========================================="
-#           echo "Version: ${{ needs.create-release.outputs.version }}"
-#           echo "Status: ${{ needs.create-release.result }}"
-#           echo "=========================================="
-#           echo "✅ Release v${{ needs.create-release.outputs.version }} is ready!"
+      - name: Create V2 API Server Archive
+        if: needs.detect-version.outputs.type == 'v2' || needs.detect-version.outputs.type == 'full'
+        run: |
+          if [ -d "v2/api-server" ]; then
+            cd v2/api-server
+            zip -r ../../crypto-tracker-v2-api-${{ needs.detect-version.outputs.version }}.zip .
+            cd ../..
+            echo "✅ Created V2 API archive"
+          fi
+
+      # ============================================
+      # V3 RELEASE ASSETS (Future - v3.x.x tags)
+      # ============================================
+      # NOTE: This section will be expanded when V3 is developed
+      - name: Create V3 Release Archive
+        if: needs.detect-version.outputs.type == 'v3' || needs.detect-version.outputs.type == 'full'
+        run: |
+          if [ -d "v3" ]; then
+            cd v3
+            zip -r ../crypto-tracker-v3-${{ needs.detect-version.outputs.version }}.zip .
+            cd ..
+            echo "✅ Created V3 archive"
+          else
+            echo "ℹ️ V3 directory not found - V3 will be added in future release"
+          fi
+
+      # ============================================
+      # FULL SOURCE ARCHIVE (for all versions)
+      # ============================================
+      - name: Create Full Source Archive
+        run: |
+          zip -r crypto-tracker-source-${{ needs.detect-version.outputs.version }}.zip . \
+            -x "*.git*" \
+            -x "*node_modules*" \
+            -x "*.pyc" \
+            -x "__pycache__/*" \
+            -x "*.zip" \
+            -x ".github/workflows/*.yml"
+          echo "✅ Created full source archive"
+
+      # ============================================
+      # GENERATE RELEASE NOTES
+      # ============================================
+      - name: Generate Release Notes
+        run: |
+          TYPE="${{ needs.detect-version.outputs.type }}"
+          MAJOR="${{ needs.detect-version.outputs.major_version }}"
+          VERSION="${{ needs.detect-version.outputs.version }}"
+          IS_PRE="${{ needs.detect-version.outputs.is_pre_release }}"
+          
+          echo "# 🚀 Crypto Tracker Pro v$VERSION" > RELEASE_NOTES.md
+          echo "" >> RELEASE_NOTES.md
+          
+          if [ "$IS_PRE" = "true" ]; then
+            echo "> ⚠️ **PRE-RELEASE VERSION** - Not for production use" >> RELEASE_NOTES.md
+            echo "" >> RELEASE_NOTES.md
+          fi
+          
+          echo "## Release Type: $TYPE (Major Version: $MAJOR)" >> RELEASE_NOTES.md
+          echo "" >> RELEASE_NOTES.md
+          
+          # Version-specific notes
+          if [ "$TYPE" = "v1" ]; then
+            cat >> RELEASE_NOTES.md << 'EOF'
+          ## ✨ V1 Features
+          - Basic cryptocurrency price tracking
+          - Real-time data from CoinGecko API
+          - Responsive design
+          - Search and pagination
+          
+          ## 📦 Download
+          - `crypto-tracker-v1-${{ needs.detect-version.outputs.version }}.zip` - V1 web app
+          
+          ## 🔗 Live Demo
+          - [V1 Live Demo](https://abdulboyprogramming-arch.github.io/crypto-price-tracker/v1/)
+          EOF
+          
+          elif [ "$TYPE" = "v2" ]; then
+            cat >> RELEASE_NOTES.md << 'EOF'
+          ## ✨ V2 Features
+          - Real-time cryptocurrency prices
+          - Multi-platform support (Web, Extension, CLI, API)
+          - Watchlist and price alerts
+          - Dark/Light theme
+          - PWA support for mobile install
+          - Browser extension for Chrome/Firefox
+          - Python and Node.js CLI tools
+          - REST API with FastAPI
+          
+          ## 📦 Downloads
+          - `crypto-tracker-v2-web-${{ needs.detect-version.outputs.version }}.zip` - V2 web app (PWA)
+          - `crypto-tracker-v2-extension-${{ needs.detect-version.outputs.version }}.zip` - Browser extension
+          - `crypto-tracker-v2-python-cli-${{ needs.detect-version.outputs.version }}.zip` - Python CLI
+          - `crypto-tracker-v2-node-cli-${{ needs.detect-version.outputs.version }}.zip` - Node.js CLI
+          - `crypto-tracker-v2-api-${{ needs.detect-version.outputs.version }}.zip` - REST API server
+          
+          ## 🔗 Live Demo
+          - [V2 Web App](https://abdulboyprogramming-arch.github.io/crypto-price-tracker/v2/web-app/)
+          EOF
+          
+          elif [ "$TYPE" = "v3" ]; then
+            cat >> RELEASE_NOTES.md << 'EOF'
+          ## 🚀 V3 Features (Coming Soon)
+          
+          **This release is a placeholder for future V3 development.**
+          
+          ### Planned Features:
+          - Enhanced analytics
+          - Machine learning predictions
+          - Portfolio tracking
+          - Social trading features
+          - Telegram/Discord bots
+          
+          📦 Downloads will be available when V3 is released.
+          EOF
+          
+          else
+            cat >> RELEASE_NOTES.md << 'EOF'
+          ## 📦 Complete System (All Versions)
+          
+          This release includes the complete source code for all versions.
+          
+          ### Included Versions
+          - **V1**: Original web tracker
+          - **V2**: Multi-platform system
+          - **Future**: V3+ will be added as developed
+          
+          ## 📦 Downloads
+          - Full source code: `crypto-tracker-source-${{ needs.detect-version.outputs.version }}.zip`
+          EOF
+          fi
+          
+          echo "" >> RELEASE_NOTES.md
+          echo "## 📋 Full Changelog" >> RELEASE_NOTES.md
+          echo "See [commits](https://github.com/${{ github.repository }}/commits/main)" >> RELEASE_NOTES.md
+
+      # ============================================
+      # CREATE GITHUB RELEASE
+      # ============================================
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v1
+        with:
+          name: Crypto Tracker Pro v${{ needs.detect-version.outputs.version }}
+          body_path: RELEASE_NOTES.md
+          draft: false
+          prerelease: ${{ needs.detect-version.outputs.is_pre_release == 'true' }}
+          files: |
+            crypto-tracker-*.zip
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  notify:
+    name: Release Complete
+    runs-on: ubuntu-latest
+    needs: [detect-version, build-release]
+    if: always()
+    steps:
+      - name: Print Completion
+        run: |
+          echo "=========================================="
+          echo "        RELEASE COMPLETED                  "
+          echo "=========================================="
+          echo "Version: ${{ needs.detect-version.outputs.version }}"
+          echo "Major Version: ${{ needs.detect-version.outputs.major_version }}"
+          echo "Type: ${{ needs.detect-version.outputs.type }}"
+          echo "Pre-release: ${{ needs.detect-version.outputs.is_pre_release }}"
+          echo "Status: ${{ needs.build-release.result }}"
+          echo "=========================================="
+          echo ""
+          echo "📦 Release URL: https://github.com/${{ github.repository }}/releases/tag/v${{ needs.detect-version.outputs.version }}"
