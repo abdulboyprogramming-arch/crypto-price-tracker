@@ -1,8 +1,10 @@
-name: Deploy v1 to GitHub Pages
+name: Deploy V1 to GitHub Pages
 
 on:
   push:
     branches: [main]
+    paths:
+      - 'v1/**'
   workflow_dispatch:
 
 permissions:
@@ -11,31 +13,30 @@ permissions:
   id-token: write
 
 concurrency:
-  group: pages
+  group: pages-v1-internal
   cancel-in-progress: false
 
 jobs:
-  deploy:
+  deploy-v1:
     environment:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout
+      - name: Checkout code
         uses: actions/checkout@v4
-      
+
       - name: Setup Pages
         uses: actions/configure-pages@v5
-        with:
-          enablement: true    # ← THIS MUST BE "true" NOT "false"
-      
-      - name: Upload artifact
+
+      - name: Upload V1 artifact
         uses: actions/upload-pages-artifact@v3
         with:
           path: v1
-      
-      - name: Deploy to GitHub Pages
+          name: github-pages-v1-internal
+
+      - name: Deploy V1 to GitHub Pages
         id: deployment
         uses: actions/deploy-pages@v4
-
-      
+        with:
+          artifact_name: github-pages-v1-internal
