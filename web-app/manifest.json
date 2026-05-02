@@ -1,6 +1,7 @@
 {
   "name": "Crypto Tracker Pro",
   "short_name": "CryptoTracker",
+  "version": "1.0.0",
   "description": "Professional real-time cryptocurrency price tracker with advanced analytics, watchlist, and price alerts",
   "start_url": "/web-app/index.html",
   "display": "standalone",
