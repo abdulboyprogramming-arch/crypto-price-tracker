@@ -71,7 +71,7 @@ jobs:
           ## 📦 Installation
 
           ### Web App (PWA)
-          - Visit: https://${OWNER}.github.io/${REPO_NAME}/web-app/
+          - Visit: https://${OWNER}.github.io/${REPO_NAME}/
           - Install on mobile: Chrome → Add to Home Screen
 
           ### Browser Extension
@@ -101,7 +101,7 @@ jobs:
           \`\`\`
 
           ## 🔗 Links
-          - [Web App Demo](https://${OWNER}.github.io/${REPO_NAME}/web-app/)
+          - [Web App Demo](https://${OWNER}.github.io/${REPO_NAME}/)
           - [GitHub Repository](https://github.com/${OWNER}/${REPO_NAME})
           - [Report Issues](https://github.com/${OWNER}/${REPO_NAME}/issues)
 
@@ -148,15 +148,25 @@ jobs:
 
       - name: Create Web App Archive
         run: |
-          cd web-app
-          zip -r ../crypto-tracker-web-v${{ needs.create-release.outputs.version }}.zip . -x "*.pyc" -x "__pycache__/*"
-          cd ..
+          zip -r crypto-tracker-web-v${{ needs.create-release.outputs.version }}.zip . \
+            -x "*.git*" \
+            -x "*node_modules*" \
+            -x "*.pyc" \
+            -x "__pycache__/*" \
+            -x "browser-extension/*" \
+            -x "cli-tools/*" \
+            -x "api-server/*" \
+            -x "core-engine/*" \
+            -x "docker/*" \
+            -x "scripts/*" \
+            -x ".github/*" \
+            -x "*.zip"
           echo "✅ Created web app archive"
 
       - name: Create Browser Extension Archive
         run: |
           cd browser-extension
-          zip -r ../crypto-tracker-extension-v${{ needs.create-release.outputs.version }}.zip . -x "*.pyc" -x "__pycache__/*"
+          zip -r ../crypto-tracker-extension-v${{ needs.create-release.outputs.version }}.zip .
           cd ..
           echo "✅ Created extension archive"
 
