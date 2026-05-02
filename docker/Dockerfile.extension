@@ -8,8 +8,8 @@ WORKDIR /build
 # Install zip utility
 RUN apk add --no-cache zip
 
-# Copy extension files
-COPY v2/browser-extension/ /build/extension/
+# Copy extension files 
+COPY browser-extension/ /build/extension/
 
 # Create zip archive
 RUN cd /build/extension && zip -r /build/crypto-tracker-extension.zip . && cd /

@@ -1,6 +1,6 @@
 {
   "name": "crypto-tracker-cli",
-  "version": "2.0.0",
+  "version": "1.0.0",
   "description": "Professional cryptocurrency price tracker CLI tool",
   "main": "index.js",
   "bin": {

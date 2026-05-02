@@ -7,7 +7,7 @@
 set -e
 
 # Configuration
-BACKUP_DIR="../crypto-tracker-backups"
+BACKUP_DIR="$HOME/crypto-tracker-backups"
 TIMESTAMP=$(date +"%Y%m%d_%H%M%S")
 BACKUP_NAME="crypto-tracker-backup-${TIMESTAMP}.tar.gz"
 

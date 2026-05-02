@@ -11,7 +11,7 @@ with open("README.md", "r", encoding="utf-8") as f:
 
 setup(
     name="crypto-tracker-cli",
-    version="2.0.0",
+    version="1.0.0",
     author="Abdulrahman Adeeyo (Abdulboy)",
     author_email="adeeyoabdulrahman@gmail.com",
     description="Professional cryptocurrency price tracker CLI tool",

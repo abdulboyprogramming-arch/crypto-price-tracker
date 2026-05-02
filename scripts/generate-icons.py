@@ -19,9 +19,9 @@ WEB_ICON_SIZES = [72, 96, 128, 144, 152, 192, 384, 512]
 # Browser Extension icon sizes
 EXTENSION_ICON_SIZES = [16, 48, 128]
 
-# Output directories
-WEB_ICON_DIR = "v2/web-app/assets/icons"
-EXTENSION_ICON_DIR = "v2/browser-extension/icons"
+# Output directories 
+WEB_ICON_DIR = "web-app/assets/icons"
+EXTENSION_ICON_DIR = "browser-extension/icons"
 
 # Colors
 PRIMARY_COLOR = (0, 212, 255)      # Cyan (#00d4ff)
@@ -182,7 +182,7 @@ def create_placeholder_images():
 def main():
     print("=" * 50)
     print("  CRYPTO TRACKER PRO - ICON GENERATOR")
-    print("  Version 2.0")
+    print("  Version 1.0")
     print("=" * 50)
     
     # Create directories

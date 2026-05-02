@@ -21,7 +21,7 @@ let marketMetrics = {};
 // ============================================
 
 async function initialize() {
-  console.log('[Extension] Initializing Crypto Tracker Pro v2.0');
+  console.log('[Extension] Initializing Crypto Tracker Pro v1.0');
   
   // Load stored data
   await loadStorageData();

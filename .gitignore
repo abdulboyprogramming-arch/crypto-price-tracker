@@ -43,10 +43,10 @@ pnpm-lock.yaml
 *.zip
 
 # Extension icons (generated files)
-v2/browser-extension/icons/*.png
+browser-extension/icons/*.png
 
 # Web app icons (generated files)
-v2/web-app/assets/icons/*.png
+web-app/assets/icons/*.png
 
 # IDE files
 .vscode/
@@ -103,10 +103,24 @@ build/
 *.egg
 
 # Generated version file
-v2/web-app/version.json
+web-app/version.json
 
 # Icon generation cache
 scripts/__pycache__/
 
 # Docker temporary files
 .docker/
+
+# API server runtime files
+api-server/__pycache__/
+api-server/*.pyc
+
+# CLI tools generated files
+cli-tools/python-cli/*.egg-info/
+cli-tools/python-cli/build/
+cli-tools/python-cli/dist/
+cli-tools/node-cli/node_modules/
+
+# Core engine generated files
+core-engine/__pycache__/
+core-engine/*.db

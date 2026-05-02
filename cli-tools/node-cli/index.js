@@ -138,7 +138,7 @@ async function liveMonitor(symbol) {
 program
     .name('crypto-tracker')
     .description('Professional cryptocurrency price tracker CLI')
-    .version('2.0.0');
+    .version('1.0.0');
 
 program
     .command('top')

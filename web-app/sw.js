@@ -1,9 +1,9 @@
 /**
- * CRYPTO PRICE TRACKER V2.0 - Service Worker
+ * CRYPTO PRICE TRACKER V1.0 - Service Worker
  * Provides offline support, caching, and PWA functionality
  */
 
-const CACHE_NAME = 'crypto-tracker-v2.0.0';
+const CACHE_NAME = 'crypto-tracker-v1.0.0';
 const OFFLINE_URL = '/web-app/offline.html';
 
 // Assets to cache on install

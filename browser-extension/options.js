@@ -224,7 +224,7 @@ async function exportData() {
     const result = await chrome.storage.local.get(['watchlist', 'alerts', 'settings']);
     const data = {
         exportDate: new Date().toISOString(),
-        version: '2.0.0',
+        version: '1.0.0',
         watchlist: result.watchlist || [],
         alerts: result.alerts || [],
         settings: result.settings || {}

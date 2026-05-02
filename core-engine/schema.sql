@@ -1,5 +1,5 @@
 -- ============================================
--- CRYPTO PRICE TRACKER V2.0 - DATABASE SCHEMA
+-- CRYPTO PRICE TRACKER V1.0 - DATABASE SCHEMA
 -- SQLite database for caching, watchlist, alerts
 -- ============================================
 

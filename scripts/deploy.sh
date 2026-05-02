@@ -1,7 +1,7 @@
 #!/bin/bash
 # ============================================
 # CRYPTO PRICE TRACKER - Deployment Script
-# Deploys V2 Web App to GitHub Pages
+# Deploys Web App to GitHub Pages
 # ============================================
 
 set -e
@@ -28,13 +28,13 @@ fi
 VERSION=$(date +"%Y.%m.%d-%H%M")
 echo -e "${BLUE}📦 Version: $VERSION${NC}"
 
-# Create version.json
-echo "{\"version\":\"$VERSION\",\"buildDate\":\"$(date -Iseconds)\"}" > v2/web-app/version.json
+# Create version.json (updated path)
+echo "{\"version\":\"$VERSION\",\"buildDate\":\"$(date -Iseconds)\"}" > web-app/version.json
 echo -e "${GREEN}✅ Created version.json${NC}"
 
 # Run tests
 echo -e "${YELLOW}🧪 Running tests...${NC}"
-if [ -f "v2/.github/workflows/test.yml" ]; then
+if [ -f ".github/workflows/test.yml" ]; then
     echo -e "${GREEN}✅ Test workflow configured${NC}"
 else
     echo -e "${RED}⚠️ Test workflow not found${NC}"
@@ -48,8 +48,8 @@ else
     echo -e "${RED}⚠️ Python not found, skipping icon generation${NC}"
 fi
 
-# Commit version file
-git add v2/web-app/version.json
+# Commit version file (updated path)
+git add web-app/version.json
 git commit -m "chore: bump version to $VERSION" || echo -e "${YELLOW}No changes to commit${NC}"
 
 # Push to trigger GitHub Actions
@@ -60,4 +60,4 @@ echo -e "${GREEN}==========================================${NC}"
 echo -e "${GREEN}  Deployment triggered!                   ${NC}"
 echo -e "${GREEN}  Check GitHub Actions for progress.      ${NC}"
 echo -e "${GREEN}==========================================${NC}"
-echo -e "${BLUE}🌐 Live URL: https://abdulboyprogramming-arch.github.io/crypto-price-tracker/v2/web-app/${NC}"
+echo -e "${BLUE}🌐 Live URL: https://abdulboyprogramming-arch.github.io/crypto-price-tracker/web-app/${NC}"

@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-CRYPTO PRICE TRACKER V2.0 - Python Core Engine
+CRYPTO PRICE TRACKER V1.0 - Python Core Engine
 Single source of truth for all data operations
 """
 
@@ -34,7 +34,7 @@ class DataSources:
     def get_headers(source: str = "coingecko") -> dict:
         """Get headers for API request"""
         return {
-            'User-Agent': 'CryptoPriceTracker/2.0',
+            'User-Agent': 'CryptoPriceTracker/1.0',
             'Accept': 'application/json',
             'Content-Type': 'application/json'
         }
