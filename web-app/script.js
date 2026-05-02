@@ -1,5 +1,5 @@
 /**
- * CRYPTO PRICE TRACKER V2.0 - Main Application Logic
+ * CRYPTO PRICE TRACKER V1.0 - Main Application Logic
  * Features: Real-time data, watchlist, alerts, charts, dark/light theme, PWA
  */
 
