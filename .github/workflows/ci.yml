@@ -36,7 +36,7 @@ jobs:
       - name: Check HTML syntax
         run: |
           echo "🔍 Checking HTML files..."
-          for file in $(find . -maxdepth 3 -name "*.html" -not -path "./node_modules/*" -not -path "./.git/*" 2>/dev/null); do
+          for file in $(find . -maxdepth 2 -name "*.html" -not -path "./node_modules/*" -not -path "./.git/*" 2>/dev/null); do
             if grep -q "</html>" "$file" 2>/dev/null; then
               echo "✅ $file"
             else
@@ -47,7 +47,7 @@ jobs:
       - name: Check CSS syntax
         run: |
           echo "🔍 Checking CSS files..."
-          for file in $(find . -maxdepth 3 -name "*.css" -not -path "./node_modules/*" -not -path "./.git/*" 2>/dev/null); do
+          for file in $(find . -maxdepth 2 -name "*.css" -not -path "./node_modules/*" -not -path "./.git/*" 2>/dev/null); do
             if grep -q "{" "$file" 2>/dev/null; then
               echo "✅ $file"
             fi
@@ -56,7 +56,7 @@ jobs:
       - name: Check JavaScript syntax
         run: |
           echo "🔍 Checking JavaScript files..."
-          for file in $(find . -maxdepth 3 -name "*.js" -not -path "./node_modules/*" -not -path "./.git/*" -not -path "./coverage/*" 2>/dev/null); do
+          for file in $(find . -maxdepth 2 -name "*.js" -not -path "./node_modules/*" -not -path "./.git/*" -not -path "./coverage/*" 2>/dev/null); do
             if node -c "$file" 2>/dev/null; then
               echo "✅ $file"
             else
@@ -68,7 +68,7 @@ jobs:
       - name: Check Python syntax
         run: |
           echo "🔍 Checking Python files..."
-          for file in $(find . -maxdepth 3 -name "*.py" -not -path "./.git/*" -not -path "./__pycache__/*" 2>/dev/null); do
+          for file in $(find . -maxdepth 2 -name "*.py" -not -path "./.git/*" -not -path "./__pycache__/*" 2>/dev/null); do
             if python -m py_compile "$file" 2>/dev/null; then
               echo "✅ $file"
             else
@@ -80,7 +80,7 @@ jobs:
       - name: Check JSON files
         run: |
           echo "🔍 Checking JSON files..."
-          for file in $(find . -maxdepth 3 -name "*.json" -not -path "./node_modules/*" -not -path "./.git/*" 2>/dev/null); do
+          for file in $(find . -maxdepth 2 -name "*.json" -not -path "./node_modules/*" -not -path "./.git/*" 2>/dev/null); do
             if python -c "import json; json.load(open('$file'))" 2>/dev/null; then
               echo "✅ $file"
             else
@@ -116,10 +116,10 @@ jobs:
           echo "🧪 Testing Web App..."
           REQUIRED_FILES="index.html style.css script.js manifest.json sw.js offline.html"
           for file in $REQUIRED_FILES; do
-            if [ -f "web-app/$file" ]; then
-              echo "✅ web-app/$file exists"
+            if [ -f "$file" ]; then
+              echo "✅ $file exists"
             else
-              echo "❌ web-app/$file missing"
+              echo "❌ $file missing"
               exit 1
             fi
           done
@@ -127,13 +127,13 @@ jobs:
       - name: Check PWA manifest
         run: |
           echo "🧪 Testing PWA manifest..."
-          python -c "import json; data=json.load(open('web-app/manifest.json')); assert 'start_url' in data; assert 'icons' in data"
+          python -c "import json; data=json.load(open('manifest.json')); assert 'start_url' in data; assert 'icons' in data"
           echo "✅ PWA manifest is valid"
 
       - name: Check Service Worker
         run: |
           echo "🧪 Testing Service Worker..."
-          if grep -q "caches.open" web-app/sw.js && grep -q "fetch" web-app/sw.js; then
+          if grep -q "caches.open" sw.js && grep -q "fetch" sw.js; then
             echo "✅ Service worker has required methods"
           else
             echo "❌ Service worker missing required methods"
