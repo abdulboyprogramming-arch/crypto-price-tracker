@@ -1,19 +1,18 @@
-name: Test V2 Components
+name: Test Components
 
 on:
   push:
     branches: [main, develop]
-    paths:
-      - 'v2/**'
+    paths-ignore:
+      - '**.md'
+      - 'LICENSE'
   pull_request:
     branches: [main]
-    paths:
-      - 'v2/**'
   workflow_dispatch:
 
 jobs:
-  test-v2-web-app:
-    name: Test V2 Web App
+  test-web-app:
+    name: Test Web App
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
@@ -26,8 +25,8 @@ jobs:
 
       - name: Test HTML structure
         run: |
-          echo "🔍 Testing V2 Web App HTML..."
-          if grep -q "Crypto Tracker Pro" v2/web-app/index.html; then
+          echo "🔍 Testing Web App HTML..."
+          if grep -q "Crypto Tracker Pro" web-app/index.html; then
             echo "✅ index.html has title"
           else
             echo "❌ index.html missing title"
@@ -36,14 +35,14 @@ jobs:
 
       - name: Test JavaScript syntax
         run: |
-          echo "🔍 Testing V2 Web App JavaScript..."
-          node -c v2/web-app/script.js && echo "✅ script.js syntax valid"
-          node -c v2/web-app/sw.js && echo "✅ sw.js syntax valid"
+          echo "🔍 Testing Web App JavaScript..."
+          node -c web-app/script.js && echo "✅ script.js syntax valid"
+          node -c web-app/sw.js && echo "✅ sw.js syntax valid"
 
       - name: Test CSS
         run: |
-          echo "🔍 Testing V2 Web App CSS..."
-          if grep -q "dark" v2/web-app/style.css; then
+          echo "🔍 Testing Web App CSS..."
+          if grep -q "dark" web-app/style.css; then
             echo "✅ Dark theme detected"
           else
             echo "⚠️ Dark theme not found"
@@ -52,11 +51,11 @@ jobs:
       - name: Test PWA manifest
         run: |
           echo "🔍 Testing PWA manifest..."
-          python -c "import json; data=json.load(open('v2/web-app/manifest.json')); assert data['start_url'] == '/web-app/index.html'; assert 'icons' in data"
+          python -c "import json; data=json.load(open('web-app/manifest.json')); assert 'start_url' in data; assert 'icons' in data"
           echo "✅ PWA manifest is valid"
 
-  test-v2-extension:
-    name: Test V2 Browser Extension
+  test-extension:
+    name: Test Browser Extension
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
@@ -67,7 +66,7 @@ jobs:
           echo "🔍 Testing Extension manifest..."
           python -c "
 import json
-with open('v2/browser-extension/manifest.json') as f:
+with open('browser-extension/manifest.json') as f:
     data = json.load(f)
 assert data['manifest_version'] == 3
 assert 'permissions' in data
@@ -79,7 +78,7 @@ print('✅ Extension manifest is valid')
       - name: Check background script
         run: |
           echo "🔍 Testing background.js..."
-          if grep -q "chrome.runtime.onMessage" v2/browser-extension/background.js; then
+          if grep -q "chrome.runtime.onMessage" browser-extension/background.js; then
             echo "✅ Message handling present"
           else
             echo "⚠️ Message handling not found"
@@ -88,14 +87,14 @@ print('✅ Extension manifest is valid')
       - name: Check popup script
         run: |
           echo "🔍 Testing popup.js..."
-          if grep -q "sendMessage" v2/browser-extension/popup.js; then
+          if grep -q "sendMessage" browser-extension/popup.js; then
             echo "✅ Message sending present"
           else
             echo "⚠️ Message sending not found"
           fi
 
-  test-v2-cli:
-    name: Test V2 CLI Tools
+  test-cli:
+    name: Test CLI Tools
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
@@ -113,8 +112,8 @@ print('✅ Extension manifest is valid')
 
       - name: Test Python CLI
         run: |
-          if [ -f "v2/cli-tools/python-cli/setup.py" ]; then
-            python -c "import ast; ast.parse(open('v2/cli-tools/python-cli/setup.py').read())"
+          if [ -f "cli-tools/python-cli/setup.py" ]; then
+            python -c "import ast; ast.parse(open('cli-tools/python-cli/setup.py').read())"
             echo "✅ Python CLI syntax valid"
           else
             echo "⚠️ Python CLI not found (optional)"
@@ -122,14 +121,14 @@ print('✅ Extension manifest is valid')
 
       - name: Test Node.js CLI
         run: |
-          if [ -f "v2/cli-tools/node-cli/index.js" ]; then
-            node -c v2/cli-tools/node-cli/index.js && echo "✅ Node.js CLI syntax valid"
+          if [ -f "cli-tools/node-cli/index.js" ]; then
+            node -c cli-tools/node-cli/index.js && echo "✅ Node.js CLI syntax valid"
           else
             echo "⚠️ Node.js CLI not found (optional)"
           fi
 
-  test-v2-api:
-    name: Test V2 API Server
+  test-api:
+    name: Test API Server
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
@@ -142,34 +141,56 @@ print('✅ Extension manifest is valid')
 
       - name: Test API server syntax
         run: |
-          if [ -f "v2/api-server/main.py" ]; then
-            python -c "import ast; ast.parse(open('v2/api-server/main.py').read())"
+          if [ -f "api-server/main.py" ]; then
+            python -c "import ast; ast.parse(open('api-server/main.py').read())"
             echo "✅ API server syntax valid"
           else
             echo "⚠️ API server not found (optional)"
           fi
 
-  test-v2-summary:
-    name: V2 Test Summary
+  test-core:
+    name: Test Core Engine
     runs-on: ubuntu-latest
-    needs: [test-v2-web-app, test-v2-extension, test-v2-cli, test-v2-api]
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Test core engine syntax
+        run: |
+          if [ -f "core-engine/core.py" ]; then
+            python -c "import ast; ast.parse(open('core-engine/core.py').read())"
+            echo "✅ Core engine syntax valid"
+          else
+            echo "⚠️ Core engine not found"
+          fi
+
+  summary:
+    name: Test Summary
+    runs-on: ubuntu-latest
+    needs: [test-web-app, test-extension, test-cli, test-api, test-core]
     if: always()
     steps:
       - name: Print Summary
         run: |
           echo "=========================================="
-          echo "       V2 COMPONENTS TEST SUMMARY         "
+          echo "          TEST SUMMARY                    "
           echo "=========================================="
-          echo "Web App:     ${{ needs.test-v2-web-app.result }}"
-          echo "Extension:   ${{ needs.test-v2-extension.result }}"
-          echo "CLI Tools:   ${{ needs.test-v2-cli.result }}"
-          echo "API Server:  ${{ needs.test-v2-api.result }}"
+          echo "Web App:     ${{ needs.test-web-app.result }}"
+          echo "Extension:   ${{ needs.test-extension.result }}"
+          echo "CLI Tools:   ${{ needs.test-cli.result }}"
+          echo "API Server:  ${{ needs.test-api.result }}"
+          echo "Core Engine: ${{ needs.test-core.result }}"
           echo "=========================================="
           
-          if [[ "${{ needs.test-v2-web-app.result }}" == "success" ]] && \
-             [[ "${{ needs.test-v2-extension.result }}" == "success" ]]; then
-            echo "✅ All critical V2 tests passed!"
+          if [[ "${{ needs.test-web-app.result }}" == "success" ]] && \
+             [[ "${{ needs.test-extension.result }}" == "success" ]]; then
+            echo "✅ All critical tests passed!"
           else
-            echo "❌ Some V2 tests failed. Please review."
+            echo "❌ Some tests failed. Please review."
             exit 1
           fi

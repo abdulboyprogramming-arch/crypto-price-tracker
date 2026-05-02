@@ -7,6 +7,7 @@ on:
       - '**.md'
       - 'LICENSE'
       - '.gitignore'
+      - 'docs/**'
   pull_request:
     branches: [main]
   workflow_dispatch:
@@ -35,7 +36,7 @@ jobs:
       - name: Check HTML syntax
         run: |
           echo "🔍 Checking HTML files..."
-          for file in $(find v1 v2 -name "*.html" -type f 2>/dev/null | head -20); do
+          for file in $(find . -maxdepth 3 -name "*.html" -not -path "./node_modules/*" -not -path "./.git/*" 2>/dev/null); do
             if grep -q "</html>" "$file" 2>/dev/null; then
               echo "✅ $file"
             else
@@ -46,7 +47,7 @@ jobs:
       - name: Check CSS syntax
         run: |
           echo "🔍 Checking CSS files..."
-          for file in $(find v1 v2 -name "*.css" -type f 2>/dev/null); do
+          for file in $(find . -maxdepth 3 -name "*.css" -not -path "./node_modules/*" -not -path "./.git/*" 2>/dev/null); do
             if grep -q "{" "$file" 2>/dev/null; then
               echo "✅ $file"
             fi
@@ -55,7 +56,7 @@ jobs:
       - name: Check JavaScript syntax
         run: |
           echo "🔍 Checking JavaScript files..."
-          for file in $(find v1 v2 -name "*.js" -type f 2>/dev/null); do
+          for file in $(find . -maxdepth 3 -name "*.js" -not -path "./node_modules/*" -not -path "./.git/*" -not -path "./coverage/*" 2>/dev/null); do
             if node -c "$file" 2>/dev/null; then
               echo "✅ $file"
             else
@@ -67,7 +68,7 @@ jobs:
       - name: Check Python syntax
         run: |
           echo "🔍 Checking Python files..."
-          for file in $(find v2 -name "*.py" -type f 2>/dev/null); do
+          for file in $(find . -maxdepth 3 -name "*.py" -not -path "./.git/*" -not -path "./__pycache__/*" 2>/dev/null); do
             if python -m py_compile "$file" 2>/dev/null; then
               echo "✅ $file"
             else
@@ -79,7 +80,7 @@ jobs:
       - name: Check JSON files
         run: |
           echo "🔍 Checking JSON files..."
-          for file in $(find v1 v2 -name "*.json" -type f 2>/dev/null); do
+          for file in $(find . -maxdepth 3 -name "*.json" -not -path "./node_modules/*" -not -path "./.git/*" 2>/dev/null); do
             if python -c "import json; json.load(open('$file'))" 2>/dev/null; then
               echo "✅ $file"
             else
@@ -91,7 +92,7 @@ jobs:
       - name: Check YAML files
         run: |
           echo "🔍 Checking YAML files..."
-          for file in $(find .github v1 v2 -name "*.yml" -o -name "*.yaml" 2>/dev/null); do
+          for file in $(find .github -name "*.yml" -o -name "*.yaml" 2>/dev/null); do
             if python -c "import yaml; yaml.safe_load(open('$file'))" 2>/dev/null; then
               echo "✅ $file"
             else
@@ -110,25 +111,15 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Check V1 web app
+      - name: Check web app files
         run: |
-          echo "🧪 Testing V1 Web App..."
-          if [ -f "v1/index.html" ] && [ -f "v1/style.css" ] && [ -f "v1/script.js" ]; then
-            echo "✅ V1 web app files exist"
-          else
-            echo "❌ V1 web app missing files"
-            exit 1
-          fi
-
-      - name: Check V2 web app
-        run: |
-          echo "🧪 Testing V2 Web App..."
+          echo "🧪 Testing Web App..."
           REQUIRED_FILES="index.html style.css script.js manifest.json sw.js offline.html"
           for file in $REQUIRED_FILES; do
-            if [ -f "v2/web-app/$file" ]; then
-              echo "✅ v2/web-app/$file exists"
+            if [ -f "web-app/$file" ]; then
+              echo "✅ web-app/$file exists"
             else
-              echo "❌ v2/web-app/$file missing"
+              echo "❌ web-app/$file missing"
               exit 1
             fi
           done
@@ -136,13 +127,13 @@ jobs:
       - name: Check PWA manifest
         run: |
           echo "🧪 Testing PWA manifest..."
-          python -c "import json; data=json.load(open('v2/web-app/manifest.json')); assert 'start_url' in data; assert 'icons' in data"
+          python -c "import json; data=json.load(open('web-app/manifest.json')); assert 'start_url' in data; assert 'icons' in data"
           echo "✅ PWA manifest is valid"
 
       - name: Check Service Worker
         run: |
           echo "🧪 Testing Service Worker..."
-          if grep -q "caches.open" v2/web-app/sw.js && grep -q "fetch" v2/web-app/sw.js; then
+          if grep -q "caches.open" web-app/sw.js && grep -q "fetch" web-app/sw.js; then
             echo "✅ Service worker has required methods"
           else
             echo "❌ Service worker missing required methods"
@@ -165,10 +156,10 @@ jobs:
           echo "🧪 Testing Browser Extension..."
           REQUIRED_FILES="manifest.json background.js popup.html popup.js options.html options.js"
           for file in $REQUIRED_FILES; do
-            if [ -f "v2/browser-extension/$file" ]; then
-              echo "✅ v2/browser-extension/$file exists"
+            if [ -f "browser-extension/$file" ]; then
+              echo "✅ browser-extension/$file exists"
             else
-              echo "❌ v2/browser-extension/$file missing"
+              echo "❌ browser-extension/$file missing"
               exit 1
             fi
           done
@@ -178,7 +169,7 @@ jobs:
           echo "🧪 Validating extension manifest.json..."
           python -c "
 import json
-with open('v2/browser-extension/manifest.json') as f:
+with open('browser-extension/manifest.json') as f:
     data = json.load(f)
 assert data['manifest_version'] == 3
 assert 'permissions' in data
@@ -210,8 +201,8 @@ print('✅ Extension manifest is valid')
       - name: Test Python CLI
         run: |
           echo "🧪 Testing Python CLI..."
-          if [ -f "v2/cli-tools/python-cli/setup.py" ]; then
-            cd v2/cli-tools/python-cli
+          if [ -f "cli-tools/python-cli/setup.py" ]; then
+            cd cli-tools/python-cli
             python -c "import ast; ast.parse(open('setup.py').read())"
             echo "✅ Python CLI setup.py is valid"
           else
@@ -221,8 +212,8 @@ print('✅ Extension manifest is valid')
       - name: Test Node.js CLI
         run: |
           echo "🧪 Testing Node.js CLI..."
-          if [ -f "v2/cli-tools/node-cli/package.json" ]; then
-            cd v2/cli-tools/node-cli
+          if [ -f "cli-tools/node-cli/package.json" ]; then
+            cd cli-tools/node-cli
             node -c index.js 2>/dev/null && echo "✅ Node.js CLI syntax valid"
           else
             echo "⚠️ Node.js CLI not found (optional)"
@@ -247,8 +238,8 @@ print('✅ Extension manifest is valid')
       - name: Test API server
         run: |
           echo "🧪 Testing API Server..."
-          if [ -f "v2/api-server/main.py" ]; then
-            python -c "import ast; ast.parse(open('v2/api-server/main.py').read())"
+          if [ -f "api-server/main.py" ]; then
+            python -c "import ast; ast.parse(open('api-server/main.py').read())"
             echo "✅ API server syntax valid"
           else
             echo "⚠️ API server not found (optional)"
@@ -256,8 +247,34 @@ print('✅ Extension manifest is valid')
 
       - name: Check requirements
         run: |
-          if [ -f "v2/api-server/requirements.txt" ]; then
+          if [ -f "api-server/requirements.txt" ]; then
             echo "✅ requirements.txt exists"
+          fi
+
+  # ============================================
+  # TEST CORE ENGINE JOB
+  # ============================================
+  test-core-engine:
+    name: Test Core Engine
+    runs-on: ubuntu-latest
+    needs: lint
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Test core engine
+        run: |
+          echo "🧪 Testing Core Engine..."
+          if [ -f "core-engine/core.py" ]; then
+            python -c "import ast; ast.parse(open('core-engine/core.py').read())"
+            echo "✅ Core engine syntax valid"
+          else
+            echo "⚠️ Core engine not found"
           fi
 
   # ============================================
@@ -276,7 +293,7 @@ print('✅ Extension manifest is valid')
           echo "🔒 Scanning for potential secrets..."
           SECRETS_FOUND=0
           for pattern in "API_KEY=[a-zA-Z0-9]" "SECRET=[a-zA-Z0-9]" "PASSWORD=[a-zA-Z0-9]" "TOKEN=[a-zA-Z0-9]"; do
-            if grep -r "$pattern" --include="*.js" --include="*.py" --include="*.html" v1 v2 2>/dev/null | grep -v "example\|demo\|test\|placeholder" | grep -q .; then
+            if grep -r "$pattern" --include="*.js" --include="*.py" --include="*.html" --exclude-dir=".git" --exclude-dir="node_modules" . 2>/dev/null | grep -v "example\|demo\|test\|placeholder" | grep -q .; then
               echo "⚠️ Potential secret pattern found: $pattern"
               SECRETS_FOUND=1
             fi
@@ -307,19 +324,20 @@ print('✅ Extension manifest is valid')
   summary:
     name: CI Summary
     runs-on: ubuntu-latest
-    needs: [lint, test-web-app, test-extension, test-cli, test-api, security]
+    needs: [lint, test-web-app, test-extension, test-cli, test-api, test-core-engine, security]
     if: always()
     steps:
       - name: Print Summary
         run: |
           echo "=========================================="
-          echo "       CI/CD SUMMARY - MONOREPO           "
+          echo "          CI/CD SUMMARY                   "
           echo "=========================================="
           echo "Lint:           ${{ needs.lint.result }}"
           echo "Web App:        ${{ needs.test-web-app.result }}"
           echo "Extension:      ${{ needs.test-extension.result }}"
           echo "CLI Tools:      ${{ needs.test-cli.result }}"
           echo "API Server:     ${{ needs.test-api.result }}"
+          echo "Core Engine:    ${{ needs.test-core-engine.result }}"
           echo "Security:       ${{ needs.security.result }}"
           echo "=========================================="
           
