@@ -31,7 +31,8 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
-        fetch-depth: 0
+        with:
+          fetch-depth: 0
 
       - name: Get version from tag or input
         id: get_version
@@ -127,6 +128,8 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
       - name: Setup Python
         uses: actions/setup-python@v5
