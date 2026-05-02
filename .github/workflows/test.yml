@@ -26,7 +26,7 @@ jobs:
       - name: Test HTML structure
         run: |
           echo "🔍 Testing Web App HTML..."
-          if grep -q "Crypto Tracker Pro" web-app/index.html; then
+          if grep -q "Crypto Tracker Pro" index.html; then
             echo "✅ index.html has title"
           else
             echo "❌ index.html missing title"
@@ -36,13 +36,13 @@ jobs:
       - name: Test JavaScript syntax
         run: |
           echo "🔍 Testing Web App JavaScript..."
-          node -c web-app/script.js && echo "✅ script.js syntax valid"
-          node -c web-app/sw.js && echo "✅ sw.js syntax valid"
+          node -c script.js && echo "✅ script.js syntax valid"
+          node -c sw.js && echo "✅ sw.js syntax valid"
 
       - name: Test CSS
         run: |
           echo "🔍 Testing Web App CSS..."
-          if grep -q "dark" web-app/style.css; then
+          if grep -q "dark" style.css; then
             echo "✅ Dark theme detected"
           else
             echo "⚠️ Dark theme not found"
@@ -51,7 +51,7 @@ jobs:
       - name: Test PWA manifest
         run: |
           echo "🔍 Testing PWA manifest..."
-          python -c "import json; data=json.load(open('web-app/manifest.json')); assert 'start_url' in data; assert 'icons' in data"
+          python -c "import json; data=json.load(open('manifest.json')); assert 'start_url' in data; assert 'icons' in data"
           echo "✅ PWA manifest is valid"
 
   test-extension:
