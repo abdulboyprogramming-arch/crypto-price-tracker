@@ -4,7 +4,12 @@ on:
   push:
     branches: [main]
     paths:
-      - 'web-app/**'
+      - 'index.html'
+      - 'style.css'
+      - 'script.js'
+      - 'manifest.json'
+      - 'sw.js'
+      - 'offline.html'
       - 'assets/**'
   workflow_dispatch:
 
@@ -34,17 +39,17 @@ jobs:
         run: |
           VERSION=$(date +'%Y.%m.%d-%H%M%S')
           COMMIT_SHA=$(git rev-parse --short HEAD)
-          echo "{\"version\":\"$VERSION\",\"buildDate\":\"$(date -Iseconds)\",\"commitSha\":\"$COMMIT_SHA\",\"branch\":\"${GITHUB_REF_NAME}\",\"environment\":\"production\"}" > web-app/version.json
+          echo "{\"version\":\"$VERSION\",\"buildDate\":\"$(date -Iseconds)\",\"commitSha\":\"$COMMIT_SHA\",\"branch\":\"${GITHUB_REF_NAME}\",\"environment\":\"production\"}" > version.json
           echo "✅ Created version.json with version: $VERSION"
 
       - name: Verify PWA files
         run: |
           REQUIRED_FILES="index.html style.css script.js manifest.json sw.js offline.html"
           for file in $REQUIRED_FILES; do
-            if [ -f "web-app/$file" ]; then
-              echo "✅ web-app/$file exists"
+            if [ -f "$file" ]; then
+              echo "✅ $file exists"
             else
-              echo "❌ web-app/$file missing"
+              echo "❌ $file missing"
               exit 1
             fi
           done
@@ -52,7 +57,7 @@ jobs:
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
         with:
-          path: web-app
+          path: .
 
       - name: Deploy to GitHub Pages
         id: deployment
