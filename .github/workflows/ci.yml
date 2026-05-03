@@ -175,7 +175,7 @@ assert data['manifest_version'] == 3
 assert 'permissions' in data
 assert 'background' in data
 print('✅ Extension manifest is valid')
-          "
+"
 
       - name: Check background script
         run: |
