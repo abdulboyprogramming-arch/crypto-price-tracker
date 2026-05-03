@@ -19,8 +19,8 @@ WEB_ICON_SIZES = [72, 96, 128, 144, 152, 192, 384, 512]
 # Browser Extension icon sizes
 EXTENSION_ICON_SIZES = [16, 48, 128]
 
-# Output directories 
-WEB_ICON_DIR = "web-app/assets/icons"
+# Output directories (FIXED: removed web-app/ prefix)
+WEB_ICON_DIR = "assets/icons"
 EXTENSION_ICON_DIR = "browser-extension/icons"
 
 # Colors
