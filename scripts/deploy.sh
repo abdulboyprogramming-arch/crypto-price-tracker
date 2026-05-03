@@ -28,8 +28,8 @@ fi
 VERSION=$(date +"%Y.%m.%d-%H%M")
 echo -e "${BLUE}📦 Version: $VERSION${NC}"
 
-# Create version.json (updated path)
-echo "{\"version\":\"$VERSION\",\"buildDate\":\"$(date -Iseconds)\"}" > web-app/version.json
+# Create version.json (FIXED: removed web-app/ prefix)
+echo "{\"version\":\"$VERSION\",\"buildDate\":\"$(date -Iseconds)\"}" > version.json
 echo -e "${GREEN}✅ Created version.json${NC}"
 
 # Run tests
@@ -48,8 +48,8 @@ else
     echo -e "${RED}⚠️ Python not found, skipping icon generation${NC}"
 fi
 
-# Commit version file (updated path)
-git add web-app/version.json
+# Commit version file (FIXED: removed web-app/ prefix)
+git add version.json
 git commit -m "chore: bump version to $VERSION" || echo -e "${YELLOW}No changes to commit${NC}"
 
 # Push to trigger GitHub Actions
@@ -60,4 +60,4 @@ echo -e "${GREEN}==========================================${NC}"
 echo -e "${GREEN}  Deployment triggered!                   ${NC}"
 echo -e "${GREEN}  Check GitHub Actions for progress.      ${NC}"
 echo -e "${GREEN}==========================================${NC}"
-echo -e "${BLUE}🌐 Live URL: https://abdulboyprogramming-arch.github.io/crypto-price-tracker/web-app/${NC}"
+echo -e "${BLUE}🌐 Live URL: https://abdulboyprogramming-arch.github.io/crypto-price-tracker/${NC}"
