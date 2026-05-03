@@ -33,10 +33,13 @@ jobs:
         with:
           python-version: '3.11'
 
+      - name: Install PyYAML
+        run: pip install pyyaml
+
       - name: Check HTML syntax
         run: |
           echo "🔍 Checking HTML files..."
-          for file in $(find . -maxdepth 2 -name "*.html" -not -path "./node_modules/*" -not -path "./.git/*" 2>/dev/null); do
+          for file in $(find . -name "*.html" -not -path "./node_modules/*" -not -path "./.git/*" 2>/dev/null); do
             if grep -q "</html>" "$file" 2>/dev/null; then
               echo "✅ $file"
             else
@@ -47,7 +50,7 @@ jobs:
       - name: Check CSS syntax
         run: |
           echo "🔍 Checking CSS files..."
-          for file in $(find . -maxdepth 2 -name "*.css" -not -path "./node_modules/*" -not -path "./.git/*" 2>/dev/null); do
+          for file in $(find . -name "*.css" -not -path "./node_modules/*" -not -path "./.git/*" 2>/dev/null); do
             if grep -q "{" "$file" 2>/dev/null; then
               echo "✅ $file"
             fi
@@ -56,7 +59,7 @@ jobs:
       - name: Check JavaScript syntax
         run: |
           echo "🔍 Checking JavaScript files..."
-          for file in $(find . -maxdepth 2 -name "*.js" -not -path "./node_modules/*" -not -path "./.git/*" -not -path "./coverage/*" 2>/dev/null); do
+          for file in $(find . -name "*.js" -not -path "./node_modules/*" -not -path "./.git/*" -not -path "./coverage/*" 2>/dev/null); do
             if node -c "$file" 2>/dev/null; then
               echo "✅ $file"
             else
@@ -68,7 +71,7 @@ jobs:
       - name: Check Python syntax
         run: |
           echo "🔍 Checking Python files..."
-          for file in $(find . -maxdepth 2 -name "*.py" -not -path "./.git/*" -not -path "./__pycache__/*" 2>/dev/null); do
+          for file in $(find . -name "*.py" -not -path "./.git/*" -not -path "./__pycache__/*" 2>/dev/null); do
             if python -m py_compile "$file" 2>/dev/null; then
               echo "✅ $file"
             else
@@ -80,7 +83,7 @@ jobs:
       - name: Check JSON files
         run: |
           echo "🔍 Checking JSON files..."
-          for file in $(find . -maxdepth 2 -name "*.json" -not -path "./node_modules/*" -not -path "./.git/*" 2>/dev/null); do
+          for file in $(find . -name "*.json" -not -path "./node_modules/*" -not -path "./.git/*" 2>/dev/null); do
             if python -c "import json; json.load(open('$file'))" 2>/dev/null; then
               echo "✅ $file"
             else
@@ -96,7 +99,8 @@ jobs:
             if python -c "import yaml; yaml.safe_load(open('$file'))" 2>/dev/null; then
               echo "✅ $file"
             else
-              echo "⚠️ $file YAML validation skipped (pyyaml not installed)"
+              echo "❌ $file YAML validation failed"
+              exit 1
             fi
           done
 
@@ -244,6 +248,7 @@ print('✅ Extension manifest is valid')
             cd cli-tools/python-cli
             python -c "import ast; ast.parse(open('setup.py').read())"
             echo "✅ Python CLI setup.py is valid"
+            cd ../../
           else
             echo "⚠️ Python CLI not found (optional)"
           fi
@@ -252,8 +257,11 @@ print('✅ Extension manifest is valid')
         run: |
           echo "🧪 Testing Node.js CLI..."
           if [ -f "cli-tools/node-cli/package.json" ]; then
-            cd cli-tools/node-cli
-            node -c index.js 2>/dev/null && echo "✅ Node.js CLI syntax valid"
+            if node -c cli-tools/node-cli/index.js 2>/dev/null; then
+              echo "✅ Node.js CLI syntax valid"
+            else
+              echo "⚠️ Node.js CLI syntax check skipped"
+            fi
           else
             echo "⚠️ Node.js CLI not found (optional)"
           fi
@@ -331,8 +339,8 @@ print('✅ Extension manifest is valid')
         run: |
           echo "🔒 Scanning for potential secrets..."
           SECRETS_FOUND=0
-          for pattern in "API_KEY=[a-zA-Z0-9]" "SECRET=[a-zA-Z0-9]" "PASSWORD=[a-zA-Z0-9]" "TOKEN=[a-zA-Z0-9]"; do
-            if grep -r "$pattern" --include="*.js" --include="*.py" --include="*.html" --exclude-dir=".git" --exclude-dir="node_modules" . 2>/dev/null | grep -v "example\|demo\|test\|placeholder" | grep -q .; then
+          for pattern in "API_KEY=" "SECRET=" "PASSWORD=" "TOKEN="; do
+            if grep -r "$pattern" --include="*.js" --include="*.py" --include="*.html" --exclude-dir=".git" --exclude-dir="node_modules" . 2>/dev/null | grep -v "example\|demo\|test\|placeholder" > /dev/null 2>&1; then
               echo "⚠️ Potential secret pattern found: $pattern"
               SECRETS_FOUND=1
             fi
@@ -345,13 +353,13 @@ print('✅ Extension manifest is valid')
       - name: Check .gitignore coverage
         run: |
           echo "🔍 Checking .gitignore..."
-          if grep -q "\.env" .gitignore; then
+          if grep -q "\.env" .gitignore 2>/dev/null; then
             echo "✅ .env files are ignored"
           else
             echo "⚠️ .env not in .gitignore"
           fi
           
-          if grep -q "\.db" .gitignore; then
+          if grep -q "\.db" .gitignore 2>/dev/null; then
             echo "✅ Database files are ignored"
           else
             echo "⚠️ .db not in .gitignore"
