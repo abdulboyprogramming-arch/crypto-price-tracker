@@ -13,31 +13,31 @@ services:
     networks:
       - crypto-network
 
-  # API Server (coming soon)
-  # api-server:
-  #   build:
-  #     context: ./api-server
-  #     dockerfile: Dockerfile
-  #   container_name: crypto-tracker-api
-  #   ports:
-  #     - "8000:8000"
-  #   environment:
-  #     - CACHE_TYPE=redis
-  #   depends_on:
-  #     - redis
-  #   restart: unless-stopped
-  #   networks:
-  #     - crypto-network
+  # API Server
+  api-server:
+    build:
+      context: ./api-server
+      dockerfile: Dockerfile
+    container_name: crypto-tracker-api
+    ports:
+      - "8000:8000"
+    environment:
+      - CACHE_TYPE=redis
+    depends_on:
+      - redis
+    restart: unless-stopped
+    networks:
+      - crypto-network
 
-  # Redis Cache (for future use)
-  # redis:
-  #   image: redis:alpine
-  #   container_name: crypto-tracker-redis
-  #   ports:
-  #     - "6379:6379"
-  #   restart: unless-stopped
-  #   networks:
-  #     - crypto-network
+  # Redis Cache
+  redis:
+    image: redis:alpine
+    container_name: crypto-tracker-redis
+    ports:
+      - "6379:6379"
+    restart: unless-stopped
+    networks:
+      - crypto-network
 
 networks:
   crypto-network:
