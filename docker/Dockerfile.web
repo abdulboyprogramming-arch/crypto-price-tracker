@@ -3,8 +3,8 @@ FROM node:18-alpine AS builder
 
 WORKDIR /app
 
-# Copy web app files
-COPY web-app/ .
+# Copy web app files (FIXED: now copies from root, not web-app/)
+COPY . .
 
 # No build step needed for static files, but prepare for future optimizations
 RUN echo "Building Crypto Tracker Pro Web App"
