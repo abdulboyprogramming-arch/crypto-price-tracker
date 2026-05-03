@@ -45,8 +45,8 @@ pnpm-lock.yaml
 # Extension icons (generated files)
 browser-extension/icons/*.png
 
-# Web app icons (generated files)
-web-app/assets/icons/*.png
+# Web app icons (generated files) - FIXED
+assets/icons/*.png
 
 # IDE files
 .vscode/
@@ -102,8 +102,8 @@ build/
 *.egg-info/
 *.egg
 
-# Generated version file
-web-app/version.json
+# Generated version file - FIXED
+version.json
 
 # Icon generation cache
 scripts/__pycache__/
