@@ -10,7 +10,7 @@ Be respectful, inclusive, and professional. All contributors are expected to fol
 
 1. **Fork the repository**
    ```bash
-   git clone https://github.com/YOUR_USERNAME/crypto-price-tracker.git
+   git clone https://github.com/abdulboyprogramming-arch/crypto-price-tracker.git
    cd crypto-price-tracker
    ```
 
