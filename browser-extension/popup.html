@@ -1,233 +1,120 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
   <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Crypto Tracker Pro</title>
-  <style>
-    * {
-      margin: 0;
-      padding: 0;
-      box-sizing: border-box;
-    }
-    
-    body {
-      width: 380px;
-      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-      background: linear-gradient(135deg, #0f2027, #203a43, #2c5364);
-      color: white;
-    }
-    
-    .header {
-      background: linear-gradient(90deg, #1a2980, #26d0ce);
-      padding: 15px;
-      text-align: center;
-    }
-    
-    .header h2 {
-      font-size: 1.2rem;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      gap: 8px;
-    }
-    
-    .stats-bar {
-      display: flex;
-      justify-content: space-around;
-      padding: 10px;
-      background: rgba(0,0,0,0.3);
-      font-size: 0.7rem;
-    }
-    
-    .stat {
-      text-align: center;
-    }
-    
-    .stat-value {
-      font-weight: bold;
-      color: #4dffea;
-    }
-    
-    .tabs {
-      display: flex;
-      border-bottom: 1px solid rgba(255,255,255,0.1);
-    }
-    
-    .tab {
-      flex: 1;
-      text-align: center;
-      padding: 10px;
-      cursor: pointer;
-      background: none;
-      border: none;
-      color: rgba(255,255,255,0.6);
-      transition: all 0.2s;
-    }
-    
-    .tab.active {
-      color: #4dffea;
-      border-bottom: 2px solid #4dffea;
-    }
-    
-    .tab-content {
-      display: none;
-      padding: 10px;
-      max-height: 400px;
-      overflow-y: auto;
-    }
-    
-    .tab-content.active {
-      display: block;
-    }
-    
-    .coin-item {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      padding: 12px;
-      border-bottom: 1px solid rgba(255,255,255,0.1);
-    }
-    
-    .coin-info {
-      display: flex;
-      align-items: center;
-      gap: 10px;
-    }
-    
-    .coin-symbol {
-      font-weight: bold;
-    }
-    
-    .coin-price {
-      font-weight: 600;
-    }
-    
-    .coin-change {
-      font-size: 0.75rem;
-    }
-    
-    .positive { color: #10b981; }
-    .negative { color: #ef4444; }
-    
-    .watchlist-btn {
-      background: none;
-      border: none;
-      color: #f59e0b;
-      cursor: pointer;
-      font-size: 1rem;
-    }
-    
-    .alert-item {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      padding: 10px;
-      border-bottom: 1px solid rgba(255,255,255,0.1);
-      font-size: 0.8rem;
-    }
-    
-    .delete-alert {
-      background: none;
-      border: none;
-      color: #ef4444;
-      cursor: pointer;
-    }
-    
-    .empty-state {
-      text-align: center;
-      padding: 30px;
-      opacity: 0.6;
-    }
-    
-    .refresh-btn {
-      background: linear-gradient(90deg, #3498db, #2ecc71);
-      border: none;
-      color: white;
-      padding: 8px;
-      margin: 10px;
-      border-radius: 20px;
-      cursor: pointer;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      gap: 8px;
-      width: calc(100% - 20px);
-    }
-    
-    .footer {
-      padding: 10px;
-      text-align: center;
-      font-size: 0.7rem;
-      border-top: 1px solid rgba(255,255,255,0.1);
-    }
-    
-    .settings-link {
-      color: #4dffea;
-      text-decoration: none;
-    }
-    
-    /* Scrollbar */
-    ::-webkit-scrollbar {
-      width: 6px;
-    }
-    
-    ::-webkit-scrollbar-track {
-      background: rgba(255,255,255,0.1);
-    }
-    
-    ::-webkit-scrollbar-thumb {
-      background: #4dffea;
-      border-radius: 3px;
-    }
-  </style>
+  <link rel="stylesheet" href="popup.css">
 </head>
 <body>
-  <div class="header">
-    <h2>
-      <i class="fas fa-chart-line"></i>
-      Crypto Tracker Pro
-    </h2>
+  <!-- Error Message Container -->
+  <div id="errorMessage" class="error-message" role="alert" aria-live="polite" style="display: none;"></div>
+
+  <!-- Loading Spinner -->
+  <div id="loading" class="loading-spinner" role="status" aria-live="polite" style="display: none;">
+    <div class="spinner"></div>
+    <p>Loading crypto data...</p>
   </div>
-  
-  <div class="stats-bar" id="statsBar">
-    <div class="stat">
-      <div>Market Cap</div>
-      <div class="stat-value" id="totalMarketCap">--</div>
+
+  <!-- Main Content -->
+  <div id="mainContent" style="display: none;">
+    <!-- Header -->
+    <header class="header">
+      <h1>💰 Crypto Tracker Pro</h1>
+      <div class="header-controls">
+        <button id="refreshBtn" class="refresh-btn" title="Refresh prices (Ctrl+Shift+R)" aria-label="Refresh cryptocurrency prices">
+          <span class="icon">🔄</span>
+        </button>
+        <button id="settingsBtn" class="settings-btn" title="Settings (Ctrl+Shift+,)" aria-label="Open settings">
+          <span class="icon">⚙️</span>
+        </button>
+      </div>
+    </header>
+
+    <!-- Last Updated -->
+    <div class="last-updated" role="status" aria-live="polite">
+      <small>Last updated: <time id="updateTime">--:--:--</time></small>
     </div>
-    <div class="stat">
-      <div>24h Volume</div>
-      <div class="stat-value" id="totalVolume">--</div>
+
+    <!-- Market Stats Bar -->
+    <div class="stats-bar">
+      <div class="stat">
+        <div>Market Cap</div>
+        <div class="stat-value" id="totalMarketCap">$--</div>
+      </div>
+      <div class="stat">
+        <div>24h Volume</div>
+        <div class="stat-value" id="totalVolume">$--</div>
+      </div>
+      <div class="stat">
+        <div>BTC Dominance</div>
+        <div class="stat-value" id="btcDominance">--%</div>
+      </div>
+    </div>
+
+    <!-- Tabs -->
+    <nav class="tabs" role="tablist">
+      <button 
+        class="tab active" 
+        data-tab="prices" 
+        role="tab" 
+        aria-selected="true" 
+        aria-controls="prices-content"
+        id="tab-prices">
+        📊 Prices
+      </button>
+      <button 
+        class="tab" 
+        data-tab="watchlist" 
+        role="tab" 
+        aria-selected="false" 
+        aria-controls="watchlist-content"
+        id="tab-watchlist">
+        ⭐ Watchlist <span id="watchlistBadge" class="badge" aria-label="watchlist items"></span>
+      </button>
+      <button 
+        class="tab" 
+        data-tab="alerts" 
+        role="tab" 
+        aria-selected="false" 
+        aria-controls="alerts-content"
+        id="tab-alerts">
+        🔔 Alerts
+      </button>
+    </nav>
+
+    <!-- Tab Contents -->
+    <div class="tab-contents">
+      <!-- Prices Tab -->
+      <div class="tab-content active" id="prices-content" role="tabpanel" aria-labelledby="tab-prices">
+        <div id="pricesList" class="prices-list">
+          <div class="empty-state">
+            <p>Loading cryptocurrency data...</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Watchlist Tab -->
+      <div class="tab-content" id="watchlist-content" role="tabpanel" aria-labelledby="tab-watchlist">
+        <div id="watchlistList" class="watchlist-list">
+          <div class="empty-state">
+            <p>No items in watchlist. Add cryptocurrencies from the prices tab!</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Alerts Tab -->
+      <div class="tab-content" id="alerts-content" role="tabpanel" aria-labelledby="tab-alerts">
+        <div id="alertsList" class="alerts-list" aria-label="Active price alerts">
+          <div class="empty-state">
+            <p>No price alerts set yet.</p>
+          </div>
+        </div>
+      </div>
     </div>
   </div>
-  
-  <div class="tabs">
-    <button class="tab active" data-tab="prices">Prices</button>
-    <button class="tab" data-tab="watchlist">Watchlist</button>
-    <button class="tab" data-tab="alerts">Alerts</button>
-  </div>
-  
-  <div id="pricesTab" class="tab-content active">
-    <div id="pricesList"></div>
-    <button class="refresh-btn" id="refreshPricesBtn">
-      <i class="fas fa-sync-alt"></i> Refresh
-    </button>
-  </div>
-  
-  <div id="watchlistTab" class="tab-content">
-    <div id="watchlistList"></div>
-  </div>
-  
-  <div id="alertsTab" class="tab-content">
-    <div id="alertsList"></div>
-  </div>
-  
-  <div class="footer">
-    <a href="#" id="settingsLink" class="settings-link">⚙️ Settings</a>
-    <span style="margin: 0 5px">•</span>
-    <span id="lastUpdated">Updating...</span>
-  </div>
-  
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/js/all.min.js"></script>
-  <script src="popup.js"></script>
+
+  <!-- Scripts -->
+  <script src="popup.js" type="module"></script>
 </body>
 </html>

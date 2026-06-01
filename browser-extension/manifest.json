@@ -1,6 +1,7 @@
 {
   "manifest_version": 3,
   "name": "Crypto Tracker Pro",
+  "short_name": "CryptoTracker",
   "version": "1.0.0",
   "description": "Real-time cryptocurrency prices, watchlist, and alerts directly in your browser",
   "author": "Abdulrahman Adeeyo",
@@ -10,12 +11,22 @@
     "storage",
     "alarms",
     "notifications",
-    "activeTab"
+    "activeTab",
+    "scripting"
   ],
   
   "host_permissions": [
     "https://api.coingecko.com/*",
-    "https://api.coincap.io/*"
+    "https://api.coincap.io/*",
+    "https://api.binance.com/*",
+    "https://api.kraken.com/*"
+  ],
+  
+  "web_accessible_resources": [
+    {
+      "resources": ["icons/*.png", "fonts/*"],
+      "matches": ["*://*/*"]
+    }
   ],
   
   "background": {
@@ -25,7 +36,7 @@
   
   "action": {
     "default_popup": "popup.html",
-    "default_title": "Crypto Tracker Pro",
+    "default_title": "Crypto Tracker Pro - Real-time Prices",
     "default_icon": {
       "16": "icons/icon16.png",
       "48": "icons/icon48.png",
@@ -54,11 +65,29 @@
         "default": "Ctrl+Shift+R",
         "mac": "Command+Shift+R"
       },
-      "description": "Refresh prices"
+      "description": "Refresh cryptocurrency prices"
+    },
+    "open-options": {
+      "suggested_key": {
+        "default": "Ctrl+Shift+,",
+        "mac": "Command+Shift+,"
+      },
+      "description": "Open settings"
+    },
+    "add-watchlist": {
+      "suggested_key": {
+        "default": "Ctrl+Shift+W",
+        "mac": "Command+Shift+W"
+      },
+      "description": "Add to watchlist"
     }
   },
   
   "content_security_policy": {
-    "extension_pages": "script-src 'self'; object-src 'self'"
-  }
+    "extension_pages": "script-src 'self'; object-src 'self'; connect-src https://api.coingecko.com https://api.coincap.io https://api.binance.com; img-src 'self' https: data:; style-src 'self' 'unsafe-inline'; font-src 'self'"
+  },
+  
+  "minimum_chrome_version": "120",
+  
+  "incognito": "split"
 }

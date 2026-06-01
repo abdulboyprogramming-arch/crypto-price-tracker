@@ -1,6 +1,6 @@
 /**
  * CRYPTO PRICE TRACKER - Browser Extension Background Service Worker
- * Handles price fetching, notifications, and data persistence
+ * Handles price fetching, notifications, and data persistence with proper error handling
  */
 
 // ============================================
@@ -10,39 +10,86 @@
 const API_BASE = 'https://api.coingecko.com/api/v3';
 const CACHE_DURATION = 60000; // 60 seconds
 const REFRESH_INTERVAL = 30000; // 30 seconds
+const REQUEST_TIMEOUT = 5000; // 5 second timeout
+const RATE_LIMIT = 10; // requests per minute
 
 let priceCache = new Map();
 let watchlist = [];
 let alerts = [];
 let marketMetrics = {};
+let requestCount = 0;
+let lastRequestTime = 0;
 
 // ============================================
 // INITIALIZATION
 // ============================================
 
 async function initialize() {
-  console.log('[Extension] Initializing Crypto Tracker Pro v1.0');
+  console.log('[Extension] Initializing Crypto Tracker Pro v1.0.0');
   
-  // Load stored data
-  await loadStorageData();
-  
-  // Set up periodic refresh
-  chrome.alarms.create('refreshPrices', { periodInMinutes: 0.5 });
-  
-  // Fetch initial prices
-  await refreshAllPrices();
-  
-  // Update badge
-  await updateBadge();
+  try {
+    // Load stored data
+    await loadStorageData();
+    
+    // Set up periodic refresh
+    chrome.alarms.create('refreshPrices', { periodInMinutes: 0.5 });
+    
+    // Fetch initial prices
+    await refreshAllPrices();
+    
+    // Update badge
+    await updateBadge();
+  } catch (error) {
+    console.error('[Extension] Initialization error:', error);
+  }
 }
 
 async function loadStorageData() {
-  const result = await chrome.storage.local.get(['watchlist', 'alerts', 'settings']);
-  watchlist = result.watchlist || ['BTC', 'ETH', 'SOL'];
-  alerts = result.alerts || [];
+  try {
+    const result = await chrome.storage.local.get(['watchlist', 'alerts', 'settings']);
+    watchlist = result.watchlist || ['BTC', 'ETH', 'SOL'];
+    alerts = result.alerts || [];
+    
+    if (result.settings) {
+      // Apply settings if needed
+    }
+  } catch (error) {
+    console.error('[Extension] Storage load error:', error);
+  }
+}
+
+// ============================================
+// RATE LIMITING
+// ============================================
+
+function canMakeRequest() {
+  const now = Date.now();
+  if (now - lastRequestTime > 60000) {
+    requestCount = 0;
+    lastRequestTime = now;
+  }
+  return requestCount < RATE_LIMIT;
+}
+
+function recordRequest() {
+  requestCount++;
+}
+
+// ============================================
+// FETCH WITH TIMEOUT
+// ============================================
+
+async function fetchWithTimeout(url, timeout = REQUEST_TIMEOUT) {
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), timeout);
   
-  if (result.settings) {
-    // Apply settings
+  try {
+    const response = await fetch(url, { signal: controller.signal });
+    clearTimeout(timeoutId);
+    return response;
+  } catch (error) {
+    clearTimeout(timeoutId);
+    throw error;
   }
 }
 
@@ -52,8 +99,15 @@ async function loadStorageData() {
 
 async function fetchMarketData() {
   try {
+    if (!canMakeRequest()) {
+      console.warn('[Extension] Rate limit reached');
+      return null;
+    }
+    
+    recordRequest();
+    
     const url = `${API_BASE}/coins/markets?vs_currency=usd&order=market_cap_desc&per_page=100&page=1&sparkline=false`;
-    const response = await fetch(url);
+    const response = await fetchWithTimeout(url);
     
     if (!response.ok) throw new Error(`HTTP ${response.status}`);
     const data = await response.json();
@@ -73,10 +127,14 @@ async function fetchMarketData() {
     });
     
     // Store in persistent storage
-    await chrome.storage.local.set({
-      priceCache: Array.from(priceCache.entries()),
-      lastUpdated: timestamp
-    });
+    try {
+      await chrome.storage.local.set({
+        priceCache: Array.from(priceCache.entries()),
+        lastUpdated: timestamp
+      });
+    } catch (storageError) {
+      console.error('[Extension] Storage error:', storageError);
+    }
     
     return data;
   } catch (error) {
@@ -87,7 +145,10 @@ async function fetchMarketData() {
 
 async function fetchGlobalMetrics() {
   try {
-    const response = await fetch(`${API_BASE}/global`);
+    if (!canMakeRequest()) return;
+    recordRequest();
+    
+    const response = await fetchWithTimeout(`${API_BASE}/global`);
     const data = await response.json();
     
     if (data && data.data) {
@@ -98,7 +159,11 @@ async function fetchGlobalMetrics() {
         activeCoins: data.data.active_cryptocurrencies || 0
       };
       
-      await chrome.storage.local.set({ marketMetrics: marketMetrics });
+      try {
+        await chrome.storage.local.set({ marketMetrics: marketMetrics });
+      } catch (storageError) {
+        console.error('[Extension] Storage error:', storageError);
+      }
     }
   } catch (error) {
     console.error('[Extension] Global metrics fetch failed:', error);
@@ -108,16 +173,20 @@ async function fetchGlobalMetrics() {
 async function refreshAllPrices() {
   console.log('[Extension] Refreshing prices...');
   
-  const [marketData, metrics] = await Promise.all([
-    fetchMarketData(),
-    fetchGlobalMetrics()
-  ]);
-  
-  if (marketData) {
-    await checkAlerts(marketData);
+  try {
+    const [marketData, metrics] = await Promise.all([
+      fetchMarketData(),
+      fetchGlobalMetrics()
+    ]);
+    
+    if (marketData) {
+      await checkAlerts(marketData);
+    }
+    
+    await updateBadge();
+  } catch (error) {
+    console.error('[Extension] Refresh failed:', error);
   }
-  
-  await updateBadge();
 }
 
 // ============================================
@@ -152,7 +221,11 @@ async function checkAlerts(marketData) {
   }
   
   if (triggeredAlerts.length) {
-    await chrome.storage.local.set({ alerts: alerts });
+    try {
+      await chrome.storage.local.set({ alerts: alerts });
+    } catch (error) {
+      console.error('[Extension] Alert storage error:', error);
+    }
     
     for (const { alert, price, coin } of triggeredAlerts) {
       await sendNotification(alert, price, coin);
@@ -161,19 +234,23 @@ async function checkAlerts(marketData) {
 }
 
 async function sendNotification(alert, currentPrice, coin) {
-  const notificationId = `alert-${alert.symbol}-${Date.now()}`;
-  
-  chrome.notifications.create(notificationId, {
-    type: 'basic',
-    iconUrl: coin.image || 'icons/icon128.png',
-    title: `💰 ${alert.symbol} Price Alert!`,
-    message: `${alert.symbol} is now ${alert.condition} $${alert.targetPrice.toLocaleString()}. Current: $${currentPrice.toLocaleString()}`,
-    priority: 2,
-    buttons: [
-      { title: 'View Details' },
-      { title: 'Dismiss' }
-    ]
-  });
+  try {
+    const notificationId = `alert-${alert.symbol}-${Date.now()}`;
+    
+    chrome.notifications.create(notificationId, {
+      type: 'basic',
+      iconUrl: coin.image || 'icons/icon128.png',
+      title: `💰 ${alert.symbol} Price Alert!`,
+      message: `${alert.symbol} is now ${alert.condition} $${currentPrice.toLocaleString()}. Target: $${alert.targetPrice.toLocaleString()}`,
+      priority: 2,
+      buttons: [
+        { title: 'View Details' },
+        { title: 'Dismiss' }
+      ]
+    });
+  } catch (error) {
+    console.error('[Extension] Notification error:', error);
+  }
 }
 
 // ============================================
@@ -181,25 +258,29 @@ async function sendNotification(alert, currentPrice, coin) {
 // ============================================
 
 async function updateBadge() {
-  // Calculate total watchlist value
-  let totalValue = 0;
-  for (const symbol of watchlist) {
-    const coinData = priceCache.get(symbol);
-    if (coinData && coinData.price) {
-      totalValue += coinData.price;
+  try {
+    // Calculate total watchlist value
+    let totalValue = 0;
+    for (const symbol of watchlist) {
+      const coinData = priceCache.get(symbol);
+      if (coinData && coinData.price) {
+        totalValue += coinData.price;
+      }
     }
-  }
-  
-  if (totalValue > 0) {
-    let badgeText;
-    if (totalValue >= 1000) badgeText = `${Math.floor(totalValue / 1000)}k`;
-    else if (totalValue >= 100) badgeText = `${Math.floor(totalValue)}`;
-    else badgeText = totalValue.toFixed(0);
     
-    chrome.action.setBadgeText({ text: badgeText });
-    chrome.action.setBadgeBackgroundColor({ color: '#10b981' });
-  } else {
-    chrome.action.setBadgeText({ text: '' });
+    if (totalValue > 0) {
+      let badgeText;
+      if (totalValue >= 1000) badgeText = `${Math.floor(totalValue / 1000)}k`;
+      else if (totalValue >= 100) badgeText = `${Math.floor(totalValue)}`;
+      else badgeText = totalValue.toFixed(0);
+      
+      chrome.action.setBadgeText({ text: badgeText });
+      chrome.action.setBadgeBackgroundColor({ color: '#10b981' });
+    } else {
+      chrome.action.setBadgeText({ text: '' });
+    }
+  } catch (error) {
+    console.error('[Extension] Badge update error:', error);
   }
 }
 
@@ -210,7 +291,12 @@ async function updateBadge() {
 async function addToWatchlist(symbol) {
   if (!watchlist.includes(symbol)) {
     watchlist.push(symbol);
-    await chrome.storage.local.set({ watchlist: watchlist });
+    try {
+      await chrome.storage.local.set({ watchlist: watchlist });
+    } catch (error) {
+      console.error('[Extension] Watchlist save error:', error);
+      return false;
+    }
     await updateBadge();
     return true;
   }
@@ -219,9 +305,34 @@ async function addToWatchlist(symbol) {
 
 async function removeFromWatchlist(symbol) {
   watchlist = watchlist.filter(s => s !== symbol);
-  await chrome.storage.local.set({ watchlist: watchlist });
+  try {
+    await chrome.storage.local.set({ watchlist: watchlist });
+  } catch (error) {
+    console.error('[Extension] Watchlist save error:', error);
+    return false;
+  }
   await updateBadge();
   return true;
+}
+
+// ============================================
+// MESSAGE TYPES VALIDATION
+// ============================================
+
+const VALID_MESSAGE_TYPES = [
+  'getPrices',
+  'getAllCoins',
+  'refresh',
+  'addToWatchlist',
+  'removeFromWatchlist',
+  'createAlert',
+  'deleteAlert',
+  'getAlerts',
+  'getWatchlist'
+];
+
+function isValidMessageType(type) {
+  return VALID_MESSAGE_TYPES.includes(type);
 }
 
 // ============================================
@@ -239,73 +350,140 @@ chrome.alarms.onAlarm.addListener((alarm) => {
 // ============================================
 
 chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
+  // Validate message type
+  if (!isValidMessageType(request.type)) {
+    sendResponse({ success: false, error: 'Invalid message type' });
+    return false;
+  }
+  
   const handler = {
     'getPrices': async () => {
-      const prices = {};
-      for (const symbol of watchlist) {
-        const data = priceCache.get(symbol);
-        if (data) {
-          prices[symbol] = {
-            price: data.price,
-            change: data.change24h,
-            name: data.name
-          };
+      try {
+        const prices = {};
+        for (const symbol of watchlist) {
+          const data = priceCache.get(symbol);
+          if (data) {
+            prices[symbol] = {
+              price: data.price,
+              change: data.change24h,
+              name: data.name
+            };
+          }
         }
+        return { success: true, prices: prices, metrics: marketMetrics };
+      } catch (error) {
+        console.error('[Extension] getPrices error:', error);
+        return { success: false, error: error.message };
       }
-      return { success: true, prices: prices, metrics: marketMetrics };
     },
     
     'getAllCoins': async () => {
-      const allCoins = Array.from(priceCache.entries()).map(([symbol, data]) => ({
-        symbol: symbol,
-        price: data.price,
-        change: data.change24h,
-        name: data.name
-      }));
-      return { success: true, coins: allCoins };
+      try {
+        const allCoins = Array.from(priceCache.entries()).map(([symbol, data]) => ({
+          symbol: symbol,
+          price: data.price,
+          change: data.change24h,
+          name: data.name
+        }));
+        return { success: true, coins: allCoins };
+      } catch (error) {
+        console.error('[Extension] getAllCoins error:', error);
+        return { success: false, error: error.message };
+      }
     },
     
     'refresh': async () => {
-      await refreshAllPrices();
-      return { success: true };
+      try {
+        await refreshAllPrices();
+        return { success: true };
+      } catch (error) {
+        console.error('[Extension] refresh error:', error);
+        return { success: false, error: error.message };
+      }
     },
     
     'addToWatchlist': async (data) => {
-      const result = await addToWatchlist(data.symbol);
-      return { success: result };
+      try {
+        if (!data.symbol || typeof data.symbol !== 'string') {
+          return { success: false, error: 'Invalid symbol' };
+        }
+        const result = await addToWatchlist(data.symbol.toUpperCase());
+        return { success: result };
+      } catch (error) {
+        console.error('[Extension] addToWatchlist error:', error);
+        return { success: false, error: error.message };
+      }
     },
     
     'removeFromWatchlist': async (data) => {
-      const result = await removeFromWatchlist(data.symbol);
-      return { success: result };
+      try {
+        if (!data.symbol || typeof data.symbol !== 'string') {
+          return { success: false, error: 'Invalid symbol' };
+        }
+        const result = await removeFromWatchlist(data.symbol.toUpperCase());
+        return { success: result };
+      } catch (error) {
+        console.error('[Extension] removeFromWatchlist error:', error);
+        return { success: false, error: error.message };
+      }
     },
     
     'createAlert': async (data) => {
-      const newAlert = {
-        id: Date.now(),
-        symbol: data.symbol,
-        condition: data.condition,
-        targetPrice: data.targetPrice,
-        createdAt: Date.now(),
-        triggered: false
-      };
-      alerts.push(newAlert);
-      await chrome.storage.local.set({ alerts: alerts });
-      return { success: true, alert: newAlert };
+      try {
+        if (!data.symbol || !data.condition || !data.targetPrice) {
+          return { success: false, error: 'Missing required fields' };
+        }
+        if (typeof data.targetPrice !== 'number' || data.targetPrice <= 0) {
+          return { success: false, error: 'Invalid target price' };
+        }
+        
+        const newAlert = {
+          id: Date.now(),
+          symbol: data.symbol.toUpperCase(),
+          condition: data.condition,
+          targetPrice: data.targetPrice,
+          createdAt: Date.now(),
+          triggered: false
+        };
+        alerts.push(newAlert);
+        await chrome.storage.local.set({ alerts: alerts });
+        return { success: true, alert: newAlert };
+      } catch (error) {
+        console.error('[Extension] createAlert error:', error);
+        return { success: false, error: error.message };
+      }
     },
     
     'deleteAlert': async (data) => {
-      alerts = alerts.filter(a => a.id !== data.id);
-      await chrome.storage.local.set({ alerts: alerts });
-      return { success: true };
+      try {
+        if (typeof data.id !== 'number') {
+          return { success: false, error: 'Invalid alert ID' };
+        }
+        alerts = alerts.filter(a => a.id !== data.id);
+        await chrome.storage.local.set({ alerts: alerts });
+        return { success: true };
+      } catch (error) {
+        console.error('[Extension] deleteAlert error:', error);
+        return { success: false, error: error.message };
+      }
     },
     
     'getAlerts': async () => {
-      return { success: true, alerts: alerts };
+      try {
+        return { success: true, alerts: alerts };
+      } catch (error) {
+        console.error('[Extension] getAlerts error:', error);
+        return { success: false, error: error.message };
+      }
     },
     
     'getWatchlist': async () => {
-      return { success: true, watchlist: watchlist };
+      try {
+        return { success: true, watchlist: watchlist };
+      } catch (error) {
+        console.error('[Extension] getWatchlist error:', error);
+        return { success: false, error: error.message };
+      }
     }
   };
   
@@ -315,7 +493,7 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
     return true; // Keep channel open for async response
   }
   
-  sendResponse({ success: false, error: 'Unknown request type' });
+  sendResponse({ success: false, error: 'Handler not found' });
   return false;
 });
 
@@ -334,10 +512,14 @@ chrome.commands.onCommand.addListener((command) => {
 // ============================================
 
 chrome.notifications.onButtonClick.addListener((notificationId, buttonIndex) => {
-  if (buttonIndex === 0) {
-    chrome.tabs.create({ url: 'popup.html' });
+  try {
+    if (buttonIndex === 0) {
+      chrome.tabs.create({ url: 'popup.html' });
+    }
+    chrome.notifications.clear(notificationId);
+  } catch (error) {
+    console.error('[Extension] Notification click error:', error);
   }
-  chrome.notifications.clear(notificationId);
 });
 
 // ============================================
@@ -348,16 +530,19 @@ chrome.runtime.onInstalled.addListener((details) => {
   console.log('[Extension] Installed/Updated:', details.reason);
   
   if (details.reason === 'install') {
-    // First install - set default watchlist
+    // First install - set default settings
     chrome.storage.local.set({
       watchlist: ['BTC', 'ETH', 'SOL'],
       alerts: [],
-      settings: { theme: 'dark', refreshInterval: 30 }
+      settings: { theme: 'dark', refreshInterval: 30, notifications: true }
     });
   }
   
   initialize();
 });
 
-// Start the extension
+// ============================================
+// START EXTENSION
+// ============================================
+
 initialize();
