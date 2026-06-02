@@ -118,6 +118,7 @@ jobs:
       - name: Check web app files
         run: |
           echo "🧪 Testing Web App..."
+          cd web-app
           REQUIRED_FILES="index.html style.css script.js manifest.json sw.js offline.html"
           for file in $REQUIRED_FILES; do
             if [ -f "$file" ]; then
@@ -127,17 +128,18 @@ jobs:
               exit 1
             fi
           done
+          cd ..
 
       - name: Check PWA manifest
         run: |
           echo "🧪 Testing PWA manifest..."
-          python -c "import json; data=json.load(open('manifest.json')); assert 'start_url' in data; assert 'icons' in data"
+          python -c "import json; data=json.load(open('web-app/manifest.json')); assert 'start_url' in data; assert 'icons' in data"
           echo "✅ PWA manifest is valid"
 
       - name: Check Service Worker
         run: |
           echo "🧪 Testing Service Worker..."
-          if grep -q "caches.open" sw.js && grep -q "fetch" sw.js; then
+          if grep -q "caches.open" web-app/sw.js && grep -q "fetch" web-app/sw.js; then
             echo "✅ Service worker has required methods"
           else
             echo "❌ Service worker missing required methods"
@@ -175,10 +177,11 @@ jobs:
 import json
 with open('browser-extension/manifest.json') as f:
     data = json.load(f)
-assert data['manifest_version'] == 3
-assert 'permissions' in data
-assert 'background' in data
-print('✅ Extension manifest is valid')
+assert data['manifest_version'] == 3, 'Must be Manifest V3'
+assert 'permissions' in data, 'Missing permissions'
+assert 'background' in data, 'Missing background'
+assert 'action' in data, 'Missing action'
+print('✅ Extension manifest is valid (Manifest V3 compliant)')
 "
 
       - name: Check background script
@@ -245,10 +248,8 @@ print('✅ Extension manifest is valid')
         run: |
           echo "🧪 Testing Python CLI..."
           if [ -f "cli-tools/python-cli/setup.py" ]; then
-            cd cli-tools/python-cli
-            python -c "import ast; ast.parse(open('setup.py').read())"
+            python -c "import ast; ast.parse(open('cli-tools/python-cli/setup.py').read())"
             echo "✅ Python CLI setup.py is valid"
-            cd ../../
           else
             echo "⚠️ Python CLI not found (optional)"
           fi
@@ -256,7 +257,7 @@ print('✅ Extension manifest is valid')
       - name: Test Node.js CLI
         run: |
           echo "🧪 Testing Node.js CLI..."
-          if [ -f "cli-tools/node-cli/package.json" ]; then
+          if [ -f "cli-tools/node-cli/index.js" ]; then
             if node -c cli-tools/node-cli/index.js 2>/dev/null; then
               echo "✅ Node.js CLI syntax valid"
             else
@@ -340,7 +341,7 @@ print('✅ Extension manifest is valid')
           echo "🔒 Scanning for potential secrets..."
           SECRETS_FOUND=0
           for pattern in "API_KEY=" "SECRET=" "PASSWORD=" "TOKEN="; do
-            if grep -r "$pattern" --include="*.js" --include="*.py" --include="*.html" --exclude-dir=".git" --exclude-dir="node_modules" . 2>/dev/null | grep -v "example\|demo\|test\|placeholder" > /dev/null 2>&1; then
+            if grep -r "$pattern" --include="*.js" --include="*.py" --include="*.html" --exclude-dir=".git" --exclude-dir="node_modules" . 2>/dev/null | grep -v "example\|demo\|test\|placeholder" > /dev/null; then
               echo "⚠️ Potential secret pattern found: $pattern"
               SECRETS_FOUND=1
             fi
