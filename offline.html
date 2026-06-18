@@ -66,29 +66,107 @@
             font-size: 0.8rem;
             opacity: 0.6;
         }
+
+        /* ===== FONT AWESOME FALLBACK SYSTEM ===== */
+        /* Hide fallback icons by default */
+        .icon-fallback {
+            display: none;
+        }
+
+        /* Show fallback emojis when Font Awesome fails to load */
+        .no-fa .fa-icon {
+            display: none !important;
+        }
+
+        .no-fa .icon-fallback {
+            display: inline-block !important;
+        }
+
+        /* Specific sizing for fallback icons */
+        .offline-icon .icon-fallback {
+            font-size: 80px;
+        }
+
+        .btn .icon-fallback {
+            font-size: 1rem;
+            margin-right: 8px;
+        }
+
+        .cached-data .icon-fallback {
+            font-size: 0.8rem;
+            margin-right: 4px;
+        }
+
+        /* Ensure fallback and FA icons are inline-block */
+        .offline-icon .fa-icon,
+        .offline-icon .icon-fallback,
+        .btn .fa-icon,
+        .btn .icon-fallback,
+        .cached-data .fa-icon,
+        .cached-data .icon-fallback {
+            display: inline-block;
+            vertical-align: middle;
+        }
+
+        /* ===== LOADING ANIMATION ===== */
+        @keyframes pulse {
+            0%, 100% { opacity: 0.6; }
+            50% { opacity: 1; }
+        }
+
+        .loading {
+            animation: pulse 1.5s ease-in-out infinite;
+        }
     </style>
 </head>
 <body>
     <div class="offline-container">
+        <!-- Icon -->
         <div class="offline-icon">
-            <!-- Fixed: Decorative icon - hidden from screen readers -->
-            <i class="fas fa-wifi" aria-hidden="true"></i>
+            <!-- Font Awesome icon (loads when online) -->
+            <i class="fas fa-wifi fa-icon" aria-hidden="true"></i>
+            <!-- Fallback emoji (shows when offline) -->
+            <span class="icon-fallback" aria-hidden="true">📶</span>
         </div>
+
         <h1>You're Offline</h1>
+        
         <p>Please check your internet connection.<br>You can still view cached data while offline.</p>
+        
+        <!-- Try Again Button -->
         <button class="btn" onclick="location.reload()">
-            <i class="fas fa-sync-alt" aria-hidden="true"></i> Try Again
+            <!-- Font Awesome icon (loads when online) -->
+            <i class="fas fa-sync-alt fa-icon" aria-hidden="true"></i>
+            <!-- Fallback emoji (shows when offline) -->
+            <span class="icon-fallback" aria-hidden="true">🔄</span>
+            Try Again
         </button>
+        
+        <!-- Cached Data Info -->
         <div class="cached-data">
-            <i class="fas fa-database" aria-hidden="true"></i> Cached data is available
+            <!-- Font Awesome icon (loads when online) -->
+            <i class="fas fa-database fa-icon" aria-hidden="true"></i>
+            <!-- Fallback emoji (shows when offline) -->
+            <span class="icon-fallback" aria-hidden="true">💾</span>
+            Cached data is available
         </div>
     </div>
-    
-    <!-- Font Awesome 6.5.1 with correct SRI hash -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/js/all.min.js" 
-            integrity="sha512-4WWRM5S+L4J6MnD3N1JG0/qa7ImYg25C9XCiPCHJxPJz7/c8F53J05e7Fg3KMgV1z/xfHmI6rQ2AkeKzGYm9cg==" 
-            crossorigin="anonymous" 
-            referrerpolicy="no-referrer">
+
+    <script 
+        src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/js/all.min.js" 
+        integrity="sha512-4WWRM5S+L4J6MnD3N1JG0/qa7ImYg25C9XCiPCHJxPJz7/c8F53J05e7Fg3KMgV1z/xfHmI6rQ2AkeKzGYm9cg==" 
+        crossorigin="anonymous" 
+        referrerpolicy="no-referrer"
+        onerror="document.documentElement.classList.add('no-fa')"
+    ></script>
+
+    <script>
+        // Double-check: If Font Awesome didn't load after 3 seconds, show fallback
+        setTimeout(function() {
+            if (typeof window.FontAwesome === 'undefined') {
+                document.documentElement.classList.add('no-fa');
+            }
+        }, 3000);
     </script>
 </body>
 </html>
