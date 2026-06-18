@@ -118,12 +118,18 @@ function showToast(message, type = 'info') {
     if (type === 'error') icon = 'fa-exclamation-circle';
     if (type === 'warning') icon = 'fa-exclamation-triangle';
     
-    toast.innerHTML = `
-        <div class="toast-content">
-            <i class="fas ${icon}"></i>
-            <span>${message}</span>
-        </div>
-    `;
+    const toastContent = document.createElement('div');
+    toastContent.className = 'toast-content';
+
+    const iconElement = document.createElement('i');
+    iconElement.className = `fas ${icon}`;
+
+    const messageElement = document.createElement('span');
+    messageElement.textContent = message;
+
+    toastContent.appendChild(iconElement);
+    toastContent.appendChild(messageElement);
+    toast.appendChild(toastContent);
     
     toastContainer.appendChild(toast);
     
