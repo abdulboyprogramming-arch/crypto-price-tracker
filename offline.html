@@ -71,7 +71,8 @@
 <body>
     <div class="offline-container">
         <div class="offline-icon">
-            <i class="fas fa-wifi" role="img" aria-label="Offline status"></i>
+            <!-- Fixed: Decorative icon - hidden from screen readers -->
+            <i class="fas fa-wifi" aria-hidden="true"></i>
         </div>
         <h1>You're Offline</h1>
         <p>Please check your internet connection.<br>You can still view cached data while offline.</p>
@@ -83,9 +84,9 @@
         </div>
     </div>
     
-    <!-- FIXED: Added Subresource Integrity and crossorigin attributes -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/js/all.min.js" 
-            integrity="sha512-REPLACE_WITH_OFFICIAL_FULL_CDN_HASH_FOR_THIS_EXACT_FILE" 
+    <!-- Font Awesome 6.5.1 with correct SRI hash -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/js/all.min.js" 
+            integrity="sha512-4WWRM5S+L4J6MnD3N1JG0/qa7ImYg25C9XCiPCHJxPJz7/c8F53J05e7Fg3KMgV1z/xfHmI6rQ2AkeKzGYm9cg==" 
             crossorigin="anonymous" 
             referrerpolicy="no-referrer">
     </script>
