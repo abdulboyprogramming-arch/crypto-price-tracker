@@ -68,14 +68,14 @@ jobs:
         run: |
           echo "🔍 Testing Extension manifest..."
           python -c "
-import json
-with open('browser-extension/manifest.json') as f:
-    data = json.load(f)
-assert data['manifest_version'] == 3, 'Must be Manifest V3'
-assert 'permissions' in data, 'Missing permissions'
-assert 'background' in data, 'Missing background'
-assert 'action' in data, 'Missing action'
-print('✅ Extension manifest is valid (Manifest V3)')
+          import json
+          with open('browser-extension/manifest.json') as f:
+              data = json.load(f)
+          assert data['manifest_version'] == 3, 'Must be Manifest V3'
+          assert 'permissions' in data, 'Missing permissions'
+          assert 'background' in data, 'Missing background'
+          assert 'action' in data, 'Missing action'
+          print('✅ Extension manifest is valid (Manifest V3)')
           "
 
       - name: Check background script
