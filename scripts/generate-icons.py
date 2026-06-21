@@ -88,8 +88,10 @@ def create_web_icon(size, filename):
         try:
             # Try to load a font, fallback to default
             font_size = size // 3
+            # Catch specific exceptions only
             font = ImageFont.truetype("/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf", font_size)
-        except:
+        except (FileNotFoundError, OSError):
+            # Only catch font loading errors
             font = ImageFont.load_default()
         
         draw.text((size // 2, size // 2), "₿", fill=(255, 255, 255, 200), 
