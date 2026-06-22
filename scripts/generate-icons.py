@@ -88,10 +88,12 @@ def create_web_icon(size, filename):
         try:
             # Try to load a font, fallback to default
             font_size = size // 3
-            # Catch specific exceptions only
+            # Only catch specific font loading errors
             font = ImageFont.truetype("/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf", font_size)
-        except (FileNotFoundError, OSError):
-            # Only catch font loading errors
+        except (FileNotFoundError, OSError) as e:
+            # Only catch font loading errors, not KeyboardInterrupt or SystemExit
+            # Font file missing or corrupted - use default font
+            print(f"  ⚠️ Font not found, using default: {e}")
             font = ImageFont.load_default()
         
         draw.text((size // 2, size // 2), "₿", fill=(255, 255, 255, 200), 
@@ -203,7 +205,6 @@ def main():
     print("\n💡 Tip: For production, replace with professionally designed icons")
 
 if __name__ == "__main__":
-    # Check if Pillow is installed
     try:
         from PIL import Image, ImageDraw, ImageFont
     except ImportError:
