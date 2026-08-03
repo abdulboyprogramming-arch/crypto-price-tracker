@@ -14,6 +14,9 @@ from datetime import datetime, timedelta
 import httpx
 import asyncio
 from contextlib import asynccontextmanager
+from slowapi import Limiter, _rate_limit_exceeded_handler
+from slowapi.util import get_remote_address
+from slowapi.errors import RateLimitExceeded
 
 # ============================================
 # CONFIGURATION
@@ -48,6 +51,11 @@ API key required for production use. Contact for access.
 
 COINGECKO_API = "https://api.coingecko.com/api/v3"
 REQUEST_TIMEOUT = 10
+
+# Rate limiter: 100 requests per minute per IP
+limiter = Limiter(key_func=get_remote_address)
+app.state.limiter = limiter
+app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
 
 # ============================================
 # DATA MODELS
@@ -113,9 +121,11 @@ app = FastAPI(
 )
 
 # CORS configuration
+# In production, replace ["*"] with specific allowed origins
+ALLOWED_ORIGINS = ["*"]  # TODO: Restrict in production
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    allow_origins=ALLOWED_ORIGINS,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -127,20 +137,34 @@ app.add_middleware(
 
 start_time = datetime.now()
 
+# Reusable HTTP client for connection pooling
+_http_client: Optional[httpx.AsyncClient] = None
+
+async def get_http_client() -> httpx.AsyncClient:
+    """Get or create a reusable HTTP client with connection pooling"""
+    global _http_client
+    if _http_client is None or _http_client.is_closed:
+        _http_client = httpx.AsyncClient(
+            timeout=REQUEST_TIMEOUT,
+            limits=httpx.Limits(max_connections=20, max_keepalive_connections=10),
+            transport=httpx.AsyncHTTPTransport(retries=2)
+        )
+    return _http_client
+
 async def fetch_from_coingecko(endpoint: str, params: Dict = None) -> Optional[Dict]:
-    """Fetch data from CoinGecko API"""
-    async with httpx.AsyncClient(timeout=REQUEST_TIMEOUT) as client:
-        try:
-            url = f"{COINGECKO_API}{endpoint}"
-            response = await client.get(url, params=params)
-            response.raise_for_status()
-            return response.json()
-        except httpx.HTTPStatusError as e:
-            print(f"HTTP error: {e}")
-            return None
-        except Exception as e:
-            print(f"API error: {e}")
-            return None
+    """Fetch data from CoinGecko API with connection pooling"""
+    try:
+        client = await get_http_client()
+        url = f"{COINGECKO_API}{endpoint}"
+        response = await client.get(url, params=params)
+        response.raise_for_status()
+        return response.json()
+    except httpx.HTTPStatusError as e:
+        print(f"HTTP error: {e}")
+        return None
+    except Exception as e:
+        print(f"API error: {e}")
+        return None
 
 def format_coin_data(coin: Dict, include_metrics: bool = True) -> Dict:
     """Format coin data for API response"""
@@ -165,7 +189,8 @@ def format_coin_data(coin: Dict, include_metrics: bool = True) -> Dict:
 # ============================================
 
 @app.get("/", tags=["Root"])
-async def root():
+@limiter.limit("100/minute")
+async def root(request):
     """API root endpoint"""
     return {
         "message": f"Welcome to {API_TITLE}",
@@ -181,7 +206,8 @@ async def root():
     }
 
 @app.get("/api/v1/health", response_model=HealthResponse, tags=["System"])
-async def health_check():
+@limiter.limit("100/minute")
+async def health_check(request):
     """Health check endpoint"""
     uptime = (datetime.now() - start_time).total_seconds()
     return HealthResponse(
@@ -192,7 +218,9 @@ async def health_check():
     )
 
 @app.get("/api/v1/prices", response_model=PricesResponse, tags=["Prices"])
+@limiter.limit("100/minute")
 async def get_prices(
+    request,
     vs_currency: str = Query("usd", description="Currency (usd, eur, gbp, jpy)"),
     per_page: int = Query(100, ge=1, le=250, description="Results per page"),
     page: int = Query(1, ge=1, description="Page number"),
@@ -232,7 +260,9 @@ async def get_prices(
     )
 
 @app.get("/api/v1/price/{symbol}", tags=["Prices"])
+@limiter.limit("100/minute")
 async def get_price(
+    request,
     symbol: str,
     vs_currency: str = Query("usd", description="Currency (usd, eur, gbp, jpy)")
 ):
@@ -260,7 +290,9 @@ async def get_price(
     return format_coin_data(data[0])
 
 @app.get("/api/v1/prices/batch", tags=["Prices"])
+@limiter.limit("100/minute")
 async def get_batch_prices(
+    request,
     symbols: str = Query(..., description="Comma-separated symbols (BTC,ETH,SOL)"),
     vs_currency: str = Query("usd", description="Currency")
 ):
@@ -307,7 +339,8 @@ async def get_batch_prices(
     }
 
 @app.get("/api/v1/markets", response_model=MarketStatsResponse, tags=["Markets"])
-async def get_market_stats():
+@limiter.limit("100/minute")
+async def get_market_stats(request):
     """Get global cryptocurrency market statistics"""
     data = await fetch_from_coingecko("/global")
     
@@ -326,7 +359,8 @@ async def get_market_stats():
     )
 
 @app.get("/api/v1/trends", response_model=TrendResponse, tags=["Markets"])
-async def get_trends():
+@limiter.limit("100/minute")
+async def get_trends(request):
     """Get top gainers and losers"""
     data = await fetch_from_coingecko(
         "/coins/markets",
@@ -368,7 +402,9 @@ async def get_trends():
     )
 
 @app.get("/api/v1/history/{symbol}", tags=["History"])
+@limiter.limit("100/minute")
 async def get_history(
+    request,
     symbol: str,
     days: int = Query(7, ge=1, le=365, description="Number of days"),
     vs_currency: str = Query("usd", description="Currency")

@@ -170,6 +170,12 @@ function debounce(func, wait) {
     };
 }
 
+function sanitizeHTML(str) {
+    const div = document.createElement('div');
+    div.textContent = str;
+    return div.innerHTML;
+}
+
 // ============================================
 // API SERVICE
 // ============================================
@@ -507,16 +513,18 @@ async function renderDashboard() {
     DOM.cryptoTableBody.innerHTML = coinsToShow.map((coin, index) => {
         const rank = startIndex + index + 1;
         const isInWatchlist = Storage.isInWatchlist(coin.symbol);
+        const safeName = sanitizeHTML(coin.name || '');
+        const safeSymbol = sanitizeHTML(coin.symbol.toUpperCase());
         
         return `
-            <tr data-symbol="${coin.symbol}">
+            <tr data-symbol="${safeSymbol}">
                 <td>${rank}</td>
                 <td>
                     <div class="coin-cell">
-                        <img src="${coin.image}" alt="${coin.name}" onerror="this.src='https://placehold.co/32x32'">
+                        <img src="${coin.image}" alt="${safeName}" onerror="this.src='https://placehold.co/32x32'">
                         <div>
-                            <div class="coin-name">${coin.name}</div>
-                            <div class="coin-symbol">${coin.symbol.toUpperCase()}</div>
+                            <div class="coin-name">${safeName}</div>
+                            <div class="coin-symbol">${safeSymbol}</div>
                         </div>
                     </div>
                 </td>
@@ -525,7 +533,7 @@ async function renderDashboard() {
                 <td>${formatNumber(coin.total_volume, 0)}</td>
                 <td>${formatNumber(coin.market_cap, 0)}</td>
                 <td>
-                    <button class="watchlist-btn ${isInWatchlist ? 'active' : ''}" data-symbol="${coin.symbol}">
+                    <button class="watchlist-btn ${isInWatchlist ? 'active' : ''}" data-symbol="${safeSymbol}">
                         <i class="fas ${isInWatchlist ? 'fa-star' : 'fa-star-o'}"></i>
                     </button>
                 </td>

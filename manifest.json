@@ -3,12 +3,12 @@
   "short_name": "CryptoTracker",
   "version": "1.0.0",
   "description": "Professional real-time cryptocurrency price tracker with advanced analytics, watchlist, and price alerts",
-  "start_url": "/web-app/index.html",
+  "start_url": "/index.html",
   "display": "standalone",
   "theme_color": "#1a1a2e",
   "background_color": "#0a0a0f",
   "orientation": "portrait",
-  "scope": "/web-app/",
+  "scope": "/",
   "icons": [
     {
       "src": "assets/icons/icon-72x72.png",
@@ -81,27 +81,49 @@
       "short_name": "BTC",
       "description": "View Bitcoin price",
       "url": "/web-app/index.html?coin=bitcoin",
-      "icons": [{ "src": "assets/icons/icon-96x96.png", "sizes": "96x96" }]
+      "icons": [
+        {
+          "src": "assets/icons/icon-96x96.png",
+          "sizes": "96x96"
+        }
+      ]
     },
     {
       "name": "View ETH",
       "short_name": "ETH",
       "description": "View Ethereum price",
       "url": "/web-app/index.html?coin=ethereum",
-      "icons": [{ "src": "assets/icons/icon-96x96.png", "sizes": "96x96" }]
+      "icons": [
+        {
+          "src": "assets/icons/icon-96x96.png",
+          "sizes": "96x96"
+        }
+      ]
     },
     {
       "name": "Watchlist",
       "short_name": "Watchlist",
       "description": "View your watchlist",
       "url": "/web-app/index.html?page=watchlist",
-      "icons": [{ "src": "assets/icons/icon-96x96.png", "sizes": "96x96" }]
+      "icons": [
+        {
+          "src": "assets/icons/icon-96x96.png",
+          "sizes": "96x96"
+        }
+      ]
     }
   ],
-  "categories": ["finance", "productivity", "utilities"],
+  "categories": [
+    "finance",
+    "productivity",
+    "utilities"
+  ],
   "prefer_related_applications": false,
   "related_applications": [],
   "lang": "en-US",
   "dir": "ltr",
-  "display_override": ["window-controls-overlay", "standalone"]
+  "display_override": [
+    "window-controls-overlay",
+    "standalone"
+  ]
 }

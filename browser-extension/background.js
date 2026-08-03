@@ -46,9 +46,14 @@ async function initialize() {
 
 async function loadStorageData() {
   try {
-    const result = await chrome.storage.local.get(['watchlist', 'alerts', 'settings']);
+    const result = await chrome.storage.local.get(['watchlist', 'alerts', 'settings', 'priceCache', 'lastUpdated']);
     watchlist = result.watchlist || ['BTC', 'ETH', 'SOL'];
     alerts = result.alerts || [];
+    
+    // Restore price cache from storage
+    if (result.priceCache && Array.isArray(result.priceCache)) {
+      priceCache = new Map(result.priceCache);
+    }
     
     if (result.settings) {
       // Apply settings if needed

@@ -139,9 +139,9 @@ function updateStats() {
 function renderPrices() {
     if (!elements.pricesList) return;
     
-    // Show top 10 coins by market cap
+    // Show top 10 coins (sorted by symbol name as marketCap is not available in cached data)
     const topCoins = Object.entries(currentPrices)
-        .sort((a, b) => (b[1].marketCap || 0) - (a[1].marketCap || 0))
+        .sort((a, b) => a[0].localeCompare(b[0]))
         .slice(0, 10);
     
     if (topCoins.length === 0) {

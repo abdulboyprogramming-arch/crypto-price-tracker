@@ -17,7 +17,7 @@ services:
   api-server:
     build:
       context: ./api-server
-      dockerfile: Dockerfile
+      dockerfile: Dockerfile.api
     container_name: crypto-tracker-api
     ports:
       - "8000:8000"

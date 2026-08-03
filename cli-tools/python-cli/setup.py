@@ -4,9 +4,10 @@ Crypto Tracker Pro - Python CLI Package
 Command-line interface for cryptocurrency price tracking
 """
 
+import os
 from setuptools import setup, find_packages
 
-with open("README.md", "r", encoding="utf-8") as f:
+with open(os.path.join(os.path.dirname(__file__), "README.md"), "r", encoding="utf-8") as f:
     long_description = f.read()
 
 setup(

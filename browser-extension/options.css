@@ -1,0 +1,225 @@
+/* Crypto Tracker Pro - Options Page Styles */
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  background: #0a0a0f;
+  color: #ffffff;
+  min-height: 100vh;
+  padding: 30px;
+}
+
+.container {
+  max-width: 700px;
+  margin: 0 auto;
+}
+
+h1 {
+  font-size: 1.8rem;
+  margin-bottom: 8px;
+  background: linear-gradient(135deg, #00d4ff, #7b2cbf);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+.subtitle {
+  color: #6c6c7a;
+  margin-bottom: 30px;
+}
+
+.settings-section {
+  background: #1a1a2e;
+  border-radius: 16px;
+  padding: 25px;
+  margin-bottom: 20px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.settings-section h2 {
+  font-size: 1.1rem;
+  margin-bottom: 20px;
+  color: #00d4ff;
+}
+
+.setting-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 15px 0;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.setting-item:last-child {
+  border-bottom: none;
+}
+
+.setting-item label {
+  font-size: 0.9rem;
+  color: #a0a0b0;
+}
+
+.setting-description {
+  font-size: 0.75rem;
+  color: #6c6c7a;
+  margin-top: 4px;
+}
+
+select, input[type="text"], input[type="number"] {
+  background: #16213e;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 8px;
+  padding: 8px 12px;
+  color: #ffffff;
+  font-size: 0.85rem;
+  min-width: 150px;
+}
+
+select:focus, input:focus {
+  outline: none;
+  border-color: #00d4ff;
+}
+
+input[type="checkbox"] {
+  width: 18px;
+  height: 18px;
+  accent-color: #00d4ff;
+  cursor: pointer;
+}
+
+.button-group {
+  display: flex;
+  gap: 10px;
+  margin-top: 15px;
+  flex-wrap: wrap;
+}
+
+.btn-primary, .btn-secondary, .btn-warning {
+  border: none;
+  border-radius: 8px;
+  padding: 10px 20px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.btn-primary {
+  background: linear-gradient(135deg, #00d4ff, #7b2cbf);
+  color: white;
+}
+
+.btn-primary:hover {
+  transform: scale(1.02);
+}
+
+.btn-secondary {
+  background: #16213e;
+  color: #ffffff;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.btn-secondary:hover {
+  background: #00d4ff;
+  color: white;
+}
+
+.btn-warning {
+  background: rgba(239, 68, 68, 0.1);
+  color: #ef4444;
+  border: 1px solid rgba(239, 68, 68, 0.3);
+}
+
+.btn-warning:hover {
+  background: #ef4444;
+  color: white;
+}
+
+.action-buttons {
+  display: flex;
+  gap: 10px;
+  justify-content: flex-end;
+  margin-top: 25px;
+}
+
+.status-message {
+  padding: 12px 20px;
+  border-radius: 8px;
+  margin-bottom: 20px;
+  font-size: 0.85rem;
+  display: none;
+}
+
+.status-message.success {
+  display: block;
+  background: rgba(16, 185, 129, 0.1);
+  border: 1px solid rgba(16, 185, 129, 0.3);
+  color: #10b981;
+}
+
+.status-message.error {
+  display: block;
+  background: rgba(239, 68, 68, 0.1);
+  border: 1px solid rgba(239, 68, 68, 0.3);
+  color: #ef4444;
+}
+
+#version {
+  color: #00d4ff;
+  font-weight: 600;
+}
+
+a {
+  color: #00d4ff;
+  text-decoration: none;
+}
+
+a:hover {
+  text-decoration: underline;
+}
+
+.watchlist-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: #16213e;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 20px;
+  padding: 6px 12px;
+  margin: 4px;
+  font-size: 0.85rem;
+}
+
+.remove-chip {
+  background: none;
+  border: none;
+  color: #6c6c7a;
+  cursor: pointer;
+  font-size: 0.8rem;
+  padding: 0;
+  width: 16px;
+  height: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  transition: all 0.2s;
+}
+
+.remove-chip:hover {
+  color: #ef4444;
+  background: rgba(239, 68, 68, 0.1);
+}
+
+.alert-card {
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 12px;
+  padding: 15px;
+  margin-bottom: 10px;
+}

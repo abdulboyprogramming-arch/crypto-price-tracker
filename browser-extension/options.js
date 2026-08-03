@@ -220,6 +220,35 @@ async function saveSettings() {
     showStatus('Settings saved');
 }
 
+async function importData() {
+    const input = document.getElementById('fileInput');
+    if (!input || !input.files || !input.files[0]) {
+        showStatus('Please select a file to import', true);
+        return;
+    }
+    try {
+        const text = await input.files[0].text();
+        const data = JSON.parse(text);
+        if (data.watchlist) {
+            await sendMessage('importWatchlist', { watchlist: data.watchlist });
+        }
+        if (data.alerts) {
+            for (const alert of data.alerts) {
+                await sendMessage('createAlert', alert);
+            }
+        }
+        if (data.settings) {
+            await chrome.storage.local.set({ settings: data.settings });
+        }
+        showStatus('Data imported successfully');
+        await loadWatchlist();
+        await loadAlerts();
+        await loadSettings();
+    } catch (error) {
+        showStatus('Failed to import data: ' + error.message, true);
+    }
+}
+
 async function exportData() {
     const result = await chrome.storage.local.get(['watchlist', 'alerts', 'settings']);
     const data = {
@@ -238,6 +267,15 @@ async function exportData() {
     a.click();
     URL.revokeObjectURL(url);
     showStatus('Data exported successfully');
+}
+
+async function clearCache() {
+    try {
+        await chrome.storage.local.remove(['priceCache', 'marketMetrics', 'lastUpdated']);
+        showStatus('Cache cleared successfully');
+    } catch (error) {
+        showStatus('Failed to clear cache', true);
+    }
 }
 
 async function clearAllData() {
@@ -273,8 +311,35 @@ function setupEventListeners() {
         elements.exportDataBtn.addEventListener('click', exportData);
     }
     
+    if (elements.importBtn) {
+        elements.importBtn.addEventListener('click', () => {
+            if (elements.fileInput) elements.fileInput.click();
+        });
+    }
+    
+    if (elements.fileInput) {
+        elements.fileInput.addEventListener('change', async (e) => {
+            if (e.target.files && e.target.files[0]) {
+                await importData();
+                e.target.value = '';
+            }
+        });
+    }
+    
+    if (elements.clearCacheBtn) {
+        elements.clearCacheBtn.addEventListener('click', clearCache);
+    }
+    
     if (elements.clearDataBtn) {
         elements.clearDataBtn.addEventListener('click', clearAllData);
+    }
+    
+    if (elements.saveBtn) {
+        elements.saveBtn.addEventListener('click', saveSettings);
+    }
+    
+    if (elements.cancelBtn) {
+        elements.cancelBtn.addEventListener('click', loadSettings);
     }
     
     // Save settings on change

@@ -191,7 +191,7 @@ class DatabaseManager:
                 if symbols:
                     placeholders = ','.join(['?' for _ in symbols])
                     cursor.execute(f"""
-                        SELECT DISTINCT symbol, name, price, market_cap, volume_24d as volume_24h,
+                        SELECT DISTINCT symbol, name, price, market_cap, volume_24h,
                                change_24h, change_percentage_24h, last_updated
                         FROM price_cache 
                         WHERE symbol IN ({placeholders})

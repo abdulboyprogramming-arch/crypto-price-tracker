@@ -121,7 +121,7 @@ jobs:
       - name: Check web app files
         run: |
           echo "🧪 Testing Web App..."
-          cd web-app
+          cd .
           REQUIRED_FILES="index.html style.css script.js manifest.json sw.js offline.html"
           for file in $REQUIRED_FILES; do
             if [ -f "$file" ]; then
@@ -136,13 +136,13 @@ jobs:
       - name: Check PWA manifest
         run: |
           echo "🧪 Testing PWA manifest..."
-          python -c "import json; data=json.load(open('web-app/manifest.json')); assert 'start_url' in data; assert 'icons' in data"
+          python -c "import json; data=json.load(open('manifest.json')); assert 'start_url' in data; assert 'icons' in data"
           echo "✅ PWA manifest is valid"
 
       - name: Check Service Worker
         run: |
           echo "🧪 Testing Service Worker..."
-          if grep -q "caches.open" web-app/sw.js && grep -q "fetch" web-app/sw.js; then
+          if grep -q "caches.open" sw.js && grep -q "fetch" sw.js; then
             echo "✅ Service worker has required methods"
           else
             echo "❌ Service worker missing required methods"

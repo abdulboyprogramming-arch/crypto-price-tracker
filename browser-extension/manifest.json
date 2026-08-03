@@ -6,7 +6,6 @@
   "description": "Real-time cryptocurrency prices, watchlist, and alerts directly in your browser",
   "author": "Abdulrahman Adeeyo",
   "homepage_url": "https://github.com/abdulboyprogramming-arch/crypto-price-tracker",
-  
   "permissions": [
     "storage",
     "alarms",
@@ -14,26 +13,25 @@
     "activeTab",
     "scripting"
   ],
-  
   "host_permissions": [
     "https://api.coingecko.com/*",
     "https://api.coincap.io/*",
-    "https://api.binance.com/*",
-    "https://api.kraken.com/*"
+    "https://api.binance.com/*"
   ],
-  
   "web_accessible_resources": [
     {
-      "resources": ["icons/*.png", "fonts/*"],
-      "matches": ["*://*/*"]
+      "resources": [
+        "icons/*.png"
+      ],
+      "matches": [
+        "*://*/*"
+      ]
     }
   ],
-  
   "background": {
     "service_worker": "background.js",
     "type": "module"
   },
-  
   "action": {
     "default_popup": "popup.html",
     "default_title": "Crypto Tracker Pro - Real-time Prices",
@@ -43,15 +41,12 @@
       "128": "icons/icon128.png"
     }
   },
-  
   "icons": {
     "16": "icons/icon16.png",
     "48": "icons/icon48.png",
     "128": "icons/icon128.png"
   },
-  
   "options_page": "options.html",
-  
   "commands": {
     "_execute_action": {
       "suggested_key": {
@@ -82,12 +77,7 @@
       "description": "Add to watchlist"
     }
   },
-  
-  "content_security_policy": {
-    "extension_pages": "script-src 'self'; object-src 'self'; connect-src https://api.coingecko.com https://api.coincap.io https://api.binance.com; img-src 'self' https: data:; style-src 'self' 'unsafe-inline'; font-src 'self'"
-  },
-  
+  "content_security_policy": "script-src 'self'; object-src 'self'; connect-src https://api.coingecko.com https://api.coincap.io https://api.binance.com; img-src 'self' https: data:; style-src 'self' 'unsafe-inline'; font-src 'self' data:",
   "minimum_chrome_version": "120",
-  
   "incognito": "split"
 }

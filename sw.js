@@ -4,16 +4,16 @@
  */
 
 const CACHE_NAME = 'crypto-tracker-v1.0.0';
-const OFFLINE_URL = '/web-app/offline.html';
+const OFFLINE_URL = '/offline.html';
 
 // Assets to cache on install
 const STATIC_CACHE_URLS = [
-  '/web-app/',
-  '/web-app/index.html',
-  '/web-app/style.css',
-  '/web-app/script.js',
-  '/web-app/manifest.json',
-  '/web-app/offline.html',
+  '/',
+  '/index.html',
+  '/style.css',
+  '/script.js',
+  '/manifest.json',
+  '/offline.html',
   'https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap',
   'https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css',
   'https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js'
@@ -194,7 +194,7 @@ async function staleWhileRevalidate(request) {
   // Return cached response immediately if available
   if (cachedResponse) {
     // Don't wait for fetch, but trigger it
-    event.waitUntil(fetchPromise);
+    // Note: event.waitUntil is not available here; fetchPromise runs in background
     return cachedResponse;
   }
   
@@ -230,7 +230,7 @@ async function cacheFirstWithFallback(request) {
     throw new Error('Image fetch failed');
   } catch (error) {
     // Return a default placeholder image
-    return new Response('/web-app/assets/default-coin.png', { status: 200 });
+    return new Response('/assets/default-coin.png', { status: 200 });
   }
 }
 
@@ -269,8 +269,8 @@ self.addEventListener('push', (event) => {
   let data = {
     title: 'Crypto Alert',
     body: 'Price alert triggered!',
-    icon: '/web-app/assets/icons/icon-192x192.png',
-    badge: '/web-app/assets/icons/badge-72x72.png'
+    icon: '/assets/icons/icon-192x192.png',
+    badge: '/assets/icons/icon-72x72.png'
   };
   
   if (event.data) {
@@ -302,7 +302,7 @@ self.addEventListener('notificationclick', (event) => {
   
   if (event.action === 'view') {
     event.waitUntil(
-      clients.openWindow('/web-app/index.html?page=alerts')
+      clients.openWindow('/index.html?page=alerts')
     );
   }
 });
@@ -370,7 +370,7 @@ async function periodicPriceUpdate() {
 self.addEventListener('message', (event) => {
   if (event.data.type === 'CHECK_UPDATE') {
     caches.open(CACHE_NAME).then((cache) => {
-      cache.match('/web-app/manifest.json').then(async (response) => {
+      cache.match('/manifest.json').then(async (response) => {
         if (response) {
           const manifest = await response.json();
           event.ports[0].postMessage({ version: manifest.version });

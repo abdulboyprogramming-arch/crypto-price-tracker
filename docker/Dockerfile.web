@@ -3,17 +3,22 @@ FROM node:18-alpine AS builder
 
 WORKDIR /app
 
-# Copy web app files (FIXED: now copies from root, not web-app/)
-COPY . .
-
-# No build step needed for static files, but prepare for future optimizations
-RUN echo "Building Crypto Tracker Pro Web App"
+# Copy only web app files
+COPY index.html style.css script.js manifest.json sw.js offline.html ./
+COPY assets/ ./assets/
+COPY .gitignore ./
 
 # Production stage
 FROM nginx:alpine
 
-# Copy built files
-COPY --from=builder /app /usr/share/nginx/html
+# Copy only necessary web files
+COPY --from=builder /app/index.html /usr/share/nginx/html/
+COPY --from=builder /app/style.css /usr/share/nginx/html/
+COPY --from=builder /app/script.js /usr/share/nginx/html/
+COPY --from=builder /app/manifest.json /usr/share/nginx/html/
+COPY --from=builder /app/sw.js /usr/share/nginx/html/
+COPY --from=builder /app/offline.html /usr/share/nginx/html/
+COPY --from=builder /app/assets/ /usr/share/nginx/html/assets/
 
 # Copy custom nginx config
 RUN echo 'server { \
