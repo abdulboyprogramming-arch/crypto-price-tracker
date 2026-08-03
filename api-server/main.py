@@ -5,7 +5,7 @@ FastAPI-based REST API for cryptocurrency data
 Provides endpoints for prices, history, trends, and watchlist management
 """
 
-from fastapi import FastAPI, HTTPException, Query, Depends, status
+from fastapi import FastAPI, HTTPException, Query, Depends, status, Header
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 from pydantic import BaseModel
@@ -13,6 +13,7 @@ from typing import List, Optional, Dict, Any
 from datetime import datetime, timedelta
 import httpx
 import asyncio
+import os
 from contextlib import asynccontextmanager
 
 # ============================================
@@ -48,6 +49,7 @@ API key required for production use. Contact for access.
 
 COINGECKO_API = "https://api.coingecko.com/api/v3"
 REQUEST_TIMEOUT = 10
+API_KEY = os.environ.get("API_KEY", "")
 
 # CoinGecko ID mapping (symbol -> id)
 COIN_ID_MAP = {
@@ -146,6 +148,16 @@ app.add_middleware(
 
 start_time = datetime.now()
 
+async def verify_api_key(x_api_key: Optional[str] = Header(None)):
+    """Validate API key provided in X-API-Key header"""
+    if not API_KEY:
+        return  # Authentication disabled when API_KEY env var is not set
+    if x_api_key != API_KEY:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Invalid or missing API key"
+        )
+
 # Reusable HTTP client for connection pooling
 _http_client: Optional[httpx.AsyncClient] = None
 
@@ -232,7 +244,7 @@ async def health_check():
         uptime_seconds=uptime
     )
 
-@app.get("/api/v1/prices", response_model=PricesResponse, tags=["Prices"])
+@app.get("/api/v1/prices", response_model=PricesResponse, tags=["Prices"], dependencies=[Depends(verify_api_key)])
 async def get_prices(
     vs_currency: str = Query("usd", description="Currency (usd, eur, gbp, jpy)"),
     per_page: int = Query(100, ge=1, le=250, description="Results per page"),
@@ -272,7 +284,7 @@ async def get_prices(
         data=formatted_data
     )
 
-@app.get("/api/v1/price/{symbol}", tags=["Prices"])
+@app.get("/api/v1/price/{symbol}", tags=["Prices"], dependencies=[Depends(verify_api_key)])
 async def get_price(
     symbol: str,
     vs_currency: str = Query("usd", description="Currency (usd, eur, gbp, jpy)")
@@ -307,7 +319,7 @@ async def get_price(
     
     return format_coin_data(data[0])
 
-@app.get("/api/v1/prices/batch", tags=["Prices"])
+@app.get("/api/v1/prices/batch", tags=["Prices"], dependencies=[Depends(verify_api_key)])
 async def get_batch_prices(
     symbols: str = Query(..., description="Comma-separated symbols (BTC,ETH,SOL)"),
     vs_currency: str = Query("usd", description="Currency")
@@ -369,7 +381,7 @@ async def get_batch_prices(
         "data": results
     }
 
-@app.get("/api/v1/markets", response_model=MarketStatsResponse, tags=["Markets"])
+@app.get("/api/v1/markets", response_model=MarketStatsResponse, tags=["Markets"], dependencies=[Depends(verify_api_key)])
 async def get_market_stats():
     """Get global cryptocurrency market statistics"""
     data = await fetch_from_coingecko("/global")
@@ -388,7 +400,7 @@ async def get_market_stats():
         last_updated=datetime.now().isoformat()
     )
 
-@app.get("/api/v1/trends", response_model=TrendResponse, tags=["Markets"])
+@app.get("/api/v1/trends", response_model=TrendResponse, tags=["Markets"], dependencies=[Depends(verify_api_key)])
 async def get_trends():
     """Get top gainers and losers"""
     data = await fetch_from_coingecko(
@@ -430,7 +442,7 @@ async def get_trends():
         timestamp=datetime.now().isoformat()
     )
 
-@app.get("/api/v1/history/{symbol}", tags=["History"])
+@app.get("/api/v1/history/{symbol}", tags=["History"], dependencies=[Depends(verify_api_key)])
 async def get_history(
     symbol: str,
     days: int = Query(7, ge=1, le=365, description="Number of days"),
