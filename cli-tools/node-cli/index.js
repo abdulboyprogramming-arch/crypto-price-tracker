@@ -118,17 +118,28 @@ async function liveMonitor(symbol) {
     console.log(chalk.cyan(`\n📊 Monitoring ${symbol.toUpperCase()}... (Press Ctrl+C to stop)\n`));
     
     const updatePrice = async () => {
-        const data = await fetchMarketData();
-        const coin = data.find(c => c.symbol.toLowerCase() === symbol.toLowerCase());
-        
-        if (coin) {
-            const timestamp = new Date().toLocaleTimeString();
-            process.stdout.write(`\r[${timestamp}] ${symbol.toUpperCase()}: ${chalk.green(formatNumber(coin.current_price))} ${formatChange(coin.price_change_percentage_24h)}`);
+        try {
+            const data = await fetchMarketData();
+            const coin = data.find(c => c.symbol.toLowerCase() === symbol.toLowerCase());
+            
+            if (coin) {
+                const timestamp = new Date().toLocaleTimeString();
+                process.stdout.write(`\r[${timestamp}] ${symbol.toUpperCase()}: ${chalk.green(formatNumber(coin.current_price))} ${formatChange(coin.price_change_percentage_24h)}`);
+            }
+        } catch (error) {
+            console.error(chalk.red(`\n❌ Monitoring error: ${error.message}`));
+            console.log(chalk.yellow('Retrying in 10 seconds...'));
         }
     };
     
     await updatePrice();
-    setInterval(updatePrice, 10000);
+    const interval = setInterval(updatePrice, 10000);
+    
+    process.on('SIGINT', () => {
+        clearInterval(interval);
+        console.log(chalk.yellow('\n\nMonitoring stopped'));
+        process.exit(0);
+    });
 }
 
 // ============================================

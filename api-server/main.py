@@ -14,9 +14,6 @@ from datetime import datetime, timedelta
 import httpx
 import asyncio
 from contextlib import asynccontextmanager
-from slowapi import Limiter, _rate_limit_exceeded_handler
-from slowapi.util import get_remote_address
-from slowapi.errors import RateLimitExceeded
 
 # ============================================
 # CONFIGURATION
@@ -52,10 +49,24 @@ API key required for production use. Contact for access.
 COINGECKO_API = "https://api.coingecko.com/api/v3"
 REQUEST_TIMEOUT = 10
 
-# Rate limiter: 100 requests per minute per IP
-limiter = Limiter(key_func=get_remote_address)
-app.state.limiter = limiter
-app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
+# CoinGecko ID mapping (symbol -> id)
+COIN_ID_MAP = {
+    "BTC": "bitcoin",
+    "ETH": "ethereum",
+    "BNB": "binancecoin",
+    "SOL": "solana",
+    "XRP": "ripple",
+    "ADA": "cardano",
+    "DOGE": "dogecoin",
+    "DOT": "polkadot",
+    "MATIC": "matic-network",
+    "SHIB": "shiba-inu",
+    "TRX": "tron",
+    "AVAX": "avalanche-2",
+    "LINK": "chainlink",
+    "UNI": "uniswap",
+    "ATOM": "cosmos",
+}
 
 # ============================================
 # DATA MODELS
@@ -121,11 +132,9 @@ app = FastAPI(
 )
 
 # CORS configuration
-# In production, replace ["*"] with specific allowed origins
-ALLOWED_ORIGINS = ["*"]  # TODO: Restrict in production
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=ALLOWED_ORIGINS,
+    allow_origins=["*"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -147,7 +156,6 @@ async def get_http_client() -> httpx.AsyncClient:
         _http_client = httpx.AsyncClient(
             timeout=REQUEST_TIMEOUT,
             limits=httpx.Limits(max_connections=20, max_keepalive_connections=10),
-            transport=httpx.AsyncHTTPTransport(retries=2)
         )
     return _http_client
 
@@ -165,6 +173,15 @@ async def fetch_from_coingecko(endpoint: str, params: Dict = None) -> Optional[D
     except Exception as e:
         print(f"API error: {e}")
         return None
+
+def get_coingecko_id(symbol: str) -> Optional[str]:
+    """Convert trading symbol to CoinGecko ID"""
+    symbol_upper = symbol.upper()
+    if symbol_upper in COIN_ID_MAP:
+        return COIN_ID_MAP[symbol_upper]
+    # If not in map, try using the symbol directly as lowercase
+    # This won't work for most symbols but handles edge cases
+    return symbol.lower()
 
 def format_coin_data(coin: Dict, include_metrics: bool = True) -> Dict:
     """Format coin data for API response"""
@@ -189,8 +206,7 @@ def format_coin_data(coin: Dict, include_metrics: bool = True) -> Dict:
 # ============================================
 
 @app.get("/", tags=["Root"])
-@limiter.limit("100/minute")
-async def root(request):
+async def root():
     """API root endpoint"""
     return {
         "message": f"Welcome to {API_TITLE}",
@@ -206,8 +222,7 @@ async def root(request):
     }
 
 @app.get("/api/v1/health", response_model=HealthResponse, tags=["System"])
-@limiter.limit("100/minute")
-async def health_check(request):
+async def health_check():
     """Health check endpoint"""
     uptime = (datetime.now() - start_time).total_seconds()
     return HealthResponse(
@@ -218,9 +233,7 @@ async def health_check(request):
     )
 
 @app.get("/api/v1/prices", response_model=PricesResponse, tags=["Prices"])
-@limiter.limit("100/minute")
 async def get_prices(
-    request,
     vs_currency: str = Query("usd", description="Currency (usd, eur, gbp, jpy)"),
     per_page: int = Query(100, ge=1, le=250, description="Results per page"),
     page: int = Query(1, ge=1, description="Page number"),
@@ -260,9 +273,7 @@ async def get_prices(
     )
 
 @app.get("/api/v1/price/{symbol}", tags=["Prices"])
-@limiter.limit("100/minute")
 async def get_price(
-    request,
     symbol: str,
     vs_currency: str = Query("usd", description="Currency (usd, eur, gbp, jpy)")
 ):
@@ -272,11 +283,18 @@ async def get_price(
     - **symbol**: Cryptocurrency symbol (BTC, ETH, SOL, etc.)
     - **vs_currency**: Target currency
     """
+    coin_id = get_coingecko_id(symbol)
+    if not coin_id:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=f"Symbol '{symbol}' is not supported. Supported symbols: {', '.join(COIN_ID_MAP.keys())}"
+        )
+    
     data = await fetch_from_coingecko(
         "/coins/markets",
         {
             "vs_currency": vs_currency,
-            "ids": symbol.lower(),
+            "ids": coin_id,
             "per_page": 1
         }
     )
@@ -290,9 +308,7 @@ async def get_price(
     return format_coin_data(data[0])
 
 @app.get("/api/v1/prices/batch", tags=["Prices"])
-@limiter.limit("100/minute")
 async def get_batch_prices(
-    request,
     symbols: str = Query(..., description="Comma-separated symbols (BTC,ETH,SOL)"),
     vs_currency: str = Query("usd", description="Currency")
 ):
@@ -303,14 +319,31 @@ async def get_batch_prices(
     - **vs_currency**: Target currency
     """
     symbol_list = [s.strip().upper() for s in symbols.split(",")]
-    ids = ",".join(s.lower() for s in symbol_list)
+    
+    # Convert symbols to CoinGecko IDs
+    coin_ids = []
+    unsupported = []
+    for symbol in symbol_list:
+        coin_id = get_coingecko_id(symbol)
+        if coin_id:
+            coin_ids.append(coin_id)
+        else:
+            unsupported.append(symbol)
+    
+    if not coin_ids:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=f"No valid symbols provided. Supported symbols: {', '.join(COIN_ID_MAP.keys())}"
+        )
+    
+    ids_param = ",".join(coin_ids)
     
     data = await fetch_from_coingecko(
         "/coins/markets",
         {
             "vs_currency": vs_currency,
-            "ids": ids,
-            "per_page": len(symbol_list)
+            "ids": ids_param,
+            "per_page": len(coin_ids)
         }
     )
     
@@ -321,16 +354,14 @@ async def get_batch_prices(
     for coin in data:
         results.append(format_coin_data(coin))
     
-    # Add missing symbols
-    found_symbols = [c.get("symbol", "").upper() for c in data]
-    for symbol in symbol_list:
-        if symbol not in found_symbols:
-            results.append({
-                "symbol": symbol,
-                "name": None,
-                "price_usd": None,
-                "error": "Symbol not found"
-            })
+    # Add unsupported symbols as errors
+    for symbol in unsupported:
+        results.append({
+            "symbol": symbol,
+            "name": None,
+            "price_usd": None,
+            "error": "Symbol not supported"
+        })
     
     return {
         "count": len(results),
@@ -339,8 +370,7 @@ async def get_batch_prices(
     }
 
 @app.get("/api/v1/markets", response_model=MarketStatsResponse, tags=["Markets"])
-@limiter.limit("100/minute")
-async def get_market_stats(request):
+async def get_market_stats():
     """Get global cryptocurrency market statistics"""
     data = await fetch_from_coingecko("/global")
     
@@ -359,8 +389,7 @@ async def get_market_stats(request):
     )
 
 @app.get("/api/v1/trends", response_model=TrendResponse, tags=["Markets"])
-@limiter.limit("100/minute")
-async def get_trends(request):
+async def get_trends():
     """Get top gainers and losers"""
     data = await fetch_from_coingecko(
         "/coins/markets",
@@ -402,9 +431,7 @@ async def get_trends(request):
     )
 
 @app.get("/api/v1/history/{symbol}", tags=["History"])
-@limiter.limit("100/minute")
 async def get_history(
-    request,
     symbol: str,
     days: int = Query(7, ge=1, le=365, description="Number of days"),
     vs_currency: str = Query("usd", description="Currency")
@@ -416,7 +443,12 @@ async def get_history(
     - **days**: Number of days (1-365)
     - **vs_currency**: Target currency
     """
-    coin_id = symbol.lower()
+    coin_id = get_coingecko_id(symbol)
+    if not coin_id:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=f"Symbol '{symbol}' is not supported. Supported symbols: {', '.join(COIN_ID_MAP.keys())}"
+        )
     
     data = await fetch_from_coingecko(
         f"/coins/{coin_id}/market_chart",
